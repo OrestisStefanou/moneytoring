@@ -1,0 +1,22 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+fastapi = "==0.78.0"
+uvicorn = {extras = ["standard"], version = "*"}
+sqlmodel = "==0.0.6"
+python-jose = {extras = ["cryptography"], version = "*"}
+passlib = {extras = ["bcrypt"], version = "*"}
+aiosqlite = "*"
+sqlalchemy = {extras = ["asyncio"], version = "*"}
+python-multipart = "*"
+pytest = "*"
+requests = "*"
+pytest-asyncio = "*"
+
+[dev-packages]
+
+[requires]
+python_version = "3.9"

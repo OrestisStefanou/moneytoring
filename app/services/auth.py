@@ -2,7 +2,7 @@ from datetime import datetime, timedelta
 from typing import Any, Dict, Optional
 from sqlmodel.ext.asyncio.session import AsyncSession
 from jose import jwt
-from app.models.app_user import AppUser
+from app.models.database.app_user import AppUser
 
 from app.repos.app_user_repo import AppUserRepo
 from app.utils.auth import get_password_hash, verify_password

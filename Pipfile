@@ -15,6 +15,7 @@ python-multipart = "*"
 pytest = "*"
 requests = "*"
 pytest-asyncio = "*"
+httpx = "*"
 
 [dev-packages]
 

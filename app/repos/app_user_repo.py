@@ -5,7 +5,7 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 from sqlmodel import select
 
 from app.repos.sql_repo import SQLRepo
-from app.models.app_user import AppUser
+from app.models.database.app_user import AppUser
 
 
 class AppUserRepo(SQLRepo):

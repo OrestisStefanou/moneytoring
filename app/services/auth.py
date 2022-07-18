@@ -6,7 +6,7 @@ from app.models.app_user import AppUser
 
 from app.repos.app_user_repo import AppUserRepo
 from app.utils.auth import get_password_hash, verify_password
-from app.config import ALGORITHM,SECRET_KEY
+from app import settings
 
 
 async def check_email_availability(session: AsyncSession, email: str) -> bool:
@@ -49,5 +49,5 @@ def create_access_token(data: Dict[str, Any], expires_delta: Optional[timedelta]
         expire = datetime.utcnow() + timedelta(minutes=30)
 
     to_encode.update({"exp": expire})
-    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    encoded_jwt = jwt.encode(to_encode, settings.oauth2_secret_key, algorithm=settings.oauth2_algorithm)
     return encoded_jwt

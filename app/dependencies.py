@@ -5,12 +5,11 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 from fastapi.security import OAuth2PasswordBearer
 from jose import jwt, JWTError
 
-from app.config import DATABASE_URL
-from app.config import ALGORITHM,SECRET_KEY
+from app import settings
 
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
-engine = create_async_engine(DATABASE_URL, connect_args={"check_same_thread": False})
+engine = create_async_engine(settings.database_dsn, connect_args={"check_same_thread": False})
 
 async def get_session():
     async_session = sessionmaker(
@@ -22,7 +21,7 @@ async def get_session():
 
 async def extract_user_id_from_token(token: str = Depends(oauth2_scheme)) -> str:
     try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        payload = jwt.decode(token, settings.oauth2_secret_key, algorithms=[settings.oauth2_algorithm])
         user_id: str = payload.get("sub")
         if user_id is None:
             raise HTTPException(

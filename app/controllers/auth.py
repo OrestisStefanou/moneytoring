@@ -4,7 +4,7 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 from app.services import auth as auth_services
 from app.errors import auth as auth_erros
 from app.utils import auth as auth_utils
-from app.config import ACCESS_TOKEN_EXPIRE_MINUTES
+from app import settings
 from app.entities.auth_token import Token
 
 async def create_user(session: AsyncSession, email: str , username: str, password: str):
@@ -26,7 +26,7 @@ async def create_token(session: AsyncSession, email: str , password: str) -> Tok
     
     token = auth_services.create_access_token(
         data={"sub": authenticated_user.user_id},
-        expires_delta= timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+        expires_delta= timedelta(minutes=settings.access_token_expire_minutes)
     )
 
     return Token(

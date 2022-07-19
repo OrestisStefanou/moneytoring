@@ -77,7 +77,7 @@ class TestToken:
         response = test_client.post(
             "/token",
             data={"username": "orestis@email.com", "password": "12345"},
-        )   
+        )
 
         assert response.status_code == 200
 

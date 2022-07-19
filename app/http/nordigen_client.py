@@ -1,9 +1,9 @@
 import time
-from typing import Dict,Any
+from typing import Dict,Any, List
 
 from app import settings
 from app.http.http_client import HttpClient
-from app.models.http.nordigen import NordigenToken
+from app.models.http.nordigen import NordigenToken, Institution
 
 
 class NordigenClient(HttpClient):
@@ -15,14 +15,13 @@ class NordigenClient(HttpClient):
     async def _get_access_token(self) -> NordigenToken:
         json_data = {
             "secret_id": settings.nordigen_id,
-            "secret_key": settings.nordigen_id,
+            "secret_key": settings.nordigen_key,
         }
 
         json_response = await self.post(
             endpoint="/token/new/",
             json=json_data
         )
-
         self._headers = {"Authorization": f'Bearer {json_response["access"]}'}
         """
         Nordigen returns the number of seconds that the token is valid
@@ -41,50 +40,40 @@ class NordigenClient(HttpClient):
             self._token = await self._get_access_token()
             return
     
-    # async def get_available_banks(self,country_code: str) -> Dict[str,Any]:
-    #     await self._check_token_expiration()
-    #     url = f"{NORDIGEN_BASE_URL}/institutions/"
-    #     headers = {"Authorization": f"Bearer {self.token.access}"}
-    #     params = {"country": country_code}
+    async def get_country_institutions(self,country_code: str) -> List[Institution]:
+        await self._check_token_expiration()
 
-    #     json_response = await make_request(
-    #         method="GET",
-    #         url=url,
-    #         headers=headers,
-    #         params=params,
-    #     )
-    #     return json_response
+        params = {"country": country_code}
 
-    # async def get_bank_by_id(self,bank_id) -> Dict[str,Any]:
-    #     await self._check_token_expiration()
-    #     url = f"{NORDIGEN_BASE_URL}/institutions/{bank_id}/"
-    #     headers = {"Authorization": f"Bearer {self.token.access}"}
+        institutions = await self.get(
+            endpoint='/institutions/',
+            headers=self._headers,
+            params=params,
+        )
+        
+        return [
+            Institution(
+                id=institution['id'],
+                name=institution['name'],
+                bic=institution['bic'],
+                transaction_total_days=institution['transaction_total_days'],
+                logo=institution['logo']
+            )
+            for institution in institutions
+        ]
 
-    #     json_response = await make_request(
-    #         method="GET",
-    #         url=url,
-    #         headers=headers,
-    #     )
-    #     return json_response
-    
-    # async def get_agreement_by_id(self,agreement_id: str) -> Dict[str,Any]:
-    #     pass
-    
-    # async def create_bank_link(self, bank_id: str, redirect: str):
-    #     await self._check_token_expiration()
-    #     url = f"{NORDIGEN_BASE_URL}/requisitions/"
-    #     headers = {"Authorization": f"Bearer {self.token.access}"}
+    async def get_institution_by_id(self, _id: str) -> Institution:
+        await self._check_token_expiration()
 
-    #     json_response = await make_request(
-    #         method="POST",
-    #         url=url,
-    #         headers=headers,
-    #         json={
-    #             "redirect": redirect,
-    #             "institution_id": bank_id
-    #         }
-    #     )
-    #     return json_response
-    
-    # async def get_bank_link_by_id(self):
-    #     pass
+        institution = await self.get(
+            endpoint=f'/institutions/{_id}/',
+            headers=self._headers,
+        )
+
+        return Institution(
+            id=institution['id'],
+            name=institution['name'],
+            bic=institution['bic'],
+            transaction_total_days=institution['transaction_total_days'],
+            logo=institution['logo']
+        )

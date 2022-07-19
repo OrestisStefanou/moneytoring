@@ -8,5 +8,5 @@ class Settings(BaseSettings):
     oauth2_algorithm: str = "HS256"
     access_token_expire_minutes: int = 120
     nordigen_base_url: str = "https://ob.nordigen.com/api/v2"
-    nordigen_key: str = "70d1bb9cbd0cfeb71532bb8649b563c4cf2a9aa11cb0bed5f4a33993f3f8be20b7db438dc75bf44683a4923b2856adfc58a81538e67c226d773c50000019ecb3" 
-    nordigen_id: str = "6b608a17-7884-40ec-8eae-03b49ee5b50e" 
+    nordigen_key: str = "f0af3ec394b363949090ae58e916d13beafbafd8b9da15db545cafd14ee4c0449ed64f8db6e01f9fe0bb715746a1c5c8c70f4cc2627871da410fd153665aa28b" 
+    nordigen_id: str = "08bbe997-fa27-47cb-95d0-779ee8a364da" 

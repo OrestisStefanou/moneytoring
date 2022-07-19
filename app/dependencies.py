@@ -6,10 +6,12 @@ from fastapi.security import OAuth2PasswordBearer
 from jose import jwt, JWTError
 
 from app import settings
+from app.http.nordigen_client import NordigenClient
 
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 engine = create_async_engine(settings.database_dsn, connect_args={"check_same_thread": False})
+nordigen_client = NordigenClient()
 
 async def get_session():
     async_session = sessionmaker(

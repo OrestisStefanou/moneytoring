@@ -32,14 +32,11 @@ class HttpClient:
             )
             try:
                 response = await client.send(request)
-                response.raise_for_status()
             except httpx.RequestError as exc:
                 logging.error(f"Http call to {exc.request.url!r} failed with: {str(exc)}")
                 raise HttpRequestError()
-            except httpx.HTTPStatusError as exc:
-                logging.error(f"Http call to {exc.request.url!r} failed with: {str(exc)} and status code: {exc.response.status_code}")
             
-            return response.json()
+            return response
     
     async def post(
         self,

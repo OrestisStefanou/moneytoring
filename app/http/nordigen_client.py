@@ -1,10 +1,12 @@
+import logging
 import time
-from typing import Dict,Any, List
+from typing import Dict,Any, List, Optional
 
 from app import settings
 from app.http.http_client import HttpClient
 from app.models.http.nordigen import NordigenToken, Institution
-
+from app.errors.nordigen import InvalidCountryCode, NordigenFailure, InstitutionNotFound
+from app.errors.http import HttpRequestError
 
 class NordigenClient(HttpClient):
     def __init__(self) -> None:
@@ -17,11 +19,16 @@ class NordigenClient(HttpClient):
             "secret_id": settings.nordigen_id,
             "secret_key": settings.nordigen_key,
         }
+        
+        try:
+            json_response = await self.post(
+                endpoint="/token/new/",
+                json=json_data
+            ).json()
+        except HttpRequestError as err:
+            logging.error("Http call to get nordigen access token failed with:", str(err))
+            return
 
-        json_response = await self.post(
-            endpoint="/token/new/",
-            json=json_data
-        )
         self._headers = {"Authorization": f'Bearer {json_response["access"]}'}
         """
         Nordigen returns the number of seconds that the token is valid
@@ -40,16 +47,25 @@ class NordigenClient(HttpClient):
             self._token = await self._get_access_token()
             return
     
-    async def get_country_institutions(self,country_code: str) -> List[Institution]:
+    async def get_country_institutions(self,country_code: str) -> Optional[List[Institution]]:
         await self._check_token_expiration()
 
         params = {"country": country_code}
 
-        institutions = await self.get(
-            endpoint='/institutions/',
-            headers=self._headers,
-            params=params,
-        )
+        try:
+            response = await self.get(
+                endpoint='/institutions/',
+                headers=self._headers,
+                params=params,
+            )
+        except HttpRequestError as err:
+            logging.error("Http call to get country institutions failed with:", str(err))
+            raise NordigenFailure("Call to get country institutions failed")
+
+        if response.status_code == 400:
+            return None
+
+        institutions = response.json()
         
         return [
             Institution(
@@ -62,13 +78,22 @@ class NordigenClient(HttpClient):
             for institution in institutions
         ]
 
-    async def get_institution_by_id(self, _id: str) -> Institution:
+    async def get_institution_by_id(self, _id: str) -> Optional[Institution]:
         await self._check_token_expiration()
 
-        institution = await self.get(
-            endpoint=f'/institutions/{_id}/',
-            headers=self._headers,
-        )
+        try:
+            response = await self.get(
+                endpoint=f'/institutions/{_id}/',
+                headers=self._headers,
+            )
+        except HttpRequestError as err:
+            logging.error("Http call to get institution by id failed with:", str(err))
+            raise NordigenFailure("Call to get institution by id failed")
+
+        if response.status_code == 404:
+            raise None
+
+        institution = response.json()
 
         return Institution(
             id=institution['id'],

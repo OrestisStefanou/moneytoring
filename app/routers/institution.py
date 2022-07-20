@@ -12,7 +12,7 @@ from app.errors import institution as institution_errros
 router = APIRouter()
 
 @router.get("/institutions", response_model=List[institution_entities.Institution], tags=['Institution'], status_code=200)
-async def get_country_institutions(country_code: str, user_id = Depends(extract_user_id_from_token)):
+async def get_country_institutions(country_code: str, _ = Depends(extract_user_id_from_token)):
     try:
         institutions = await institution_controller.get_country_institutions(country_code)
     except institution_errros.InvalidCountryCode:
@@ -33,3 +33,27 @@ async def get_country_institutions(country_code: str, user_id = Depends(extract_
         )
 
     return institutions
+
+
+@router.get("/institutions/{institution_id}", response_model=institution_entities.Institution, tags=['Institution'], status_code=200)
+async def get_institution_by_id(institution_id: str, _ = Depends(extract_user_id_from_token)):
+    try:
+        institution = await institution_controller.get_institution_by_id(institution_id)
+    except institution_errros.InstitutionNotFound:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Insitution not found",
+        )
+    except nordigen_erros.NordigenFailure:
+        raise HTTPException(
+            status_code=503,
+            detail="Bank service is not responding, we are working on it",
+        )
+    except Exception as err:
+        logging.exception("Unexpected error during get institutions:", str(err))
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Something went wrong, we are working on it",
+        )
+
+    return institution

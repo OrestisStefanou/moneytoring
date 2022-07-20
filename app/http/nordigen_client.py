@@ -91,7 +91,7 @@ class NordigenClient(HttpClient):
             raise NordigenFailure("Call to get institution by id failed")
 
         if response.status_code == 404:
-            raise None
+            return None
 
         institution = response.json()
 

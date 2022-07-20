@@ -5,7 +5,7 @@ from jose import jwt
 from app.models.database.app_user import AppUser
 
 from app.repos.app_user_repo import AppUserRepo
-from app.utils.auth import get_password_hash, verify_password
+from app.utils import auth as auth_utils
 from app import settings
 
 
@@ -24,7 +24,7 @@ async def check_email_availability(session: AsyncSession, email: str) -> bool:
 
 async def create_app_user(session: AsyncSession, username: str, email:str, password: str) -> None:
     app_user_repo = AppUserRepo(session=session)
-    await app_user_repo.add_user(username=username, email=email, password=get_password_hash(password))
+    await app_user_repo.add_user(username=username, email=email, password=auth_utils.get_password_hash(password))
 
 
 async def get_authenticated_user(session: AsyncSession, email: str, password: str) -> Optional[AppUser]:
@@ -34,7 +34,7 @@ async def get_authenticated_user(session: AsyncSession, email: str, password: st
     if app_user is None:
         return None
 
-    if not verify_password(password, app_user.password):
+    if not auth_utils.verify_password(password, app_user.password):
         return None
     
     return app_user

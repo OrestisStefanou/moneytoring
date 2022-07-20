@@ -37,6 +37,7 @@ async def test_db():
 
     app.dependency_overrides[dependencies.get_session] = get_test_session
     yield
+    app.dependency_overrides = {}
     async with engine.begin() as conn:
         await conn.run_sync(SQLModel.metadata.drop_all)
 
@@ -64,3 +65,18 @@ async def async_session() -> AsyncSession:
         await conn.run_sync(SQLModel.metadata.drop_all)
 
     await engine.dispose()
+
+
+@pytest.fixture(scope="function")
+def authenticated_user():
+    async def get_user_id_from_token():
+        return "test_user_id"
+    
+    app.dependency_overrides[dependencies.extract_user_id_from_token] = get_user_id_from_token
+    yield
+    app.dependency_overrides = {}
+
+
+@pytest.fixture(scope="function")
+def assert_all_responses_were_requested() -> bool:
+    return False

@@ -1,5 +1,5 @@
 import pytest
-from app.tests.fixtures import test_client, test_db, event_loop, async_session
+from app.tests.fixtures.app_fixtures import test_client, test_db, event_loop, async_session
 from app.repos.app_user_repo import AppUserRepo
 
 class TestSignUp:

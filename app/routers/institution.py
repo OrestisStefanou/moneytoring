@@ -41,7 +41,7 @@ async def get_institution_by_id(institution_id: str, _ = Depends(extract_user_id
         institution = await institution_controller.get_institution_by_id(institution_id)
     except institution_errros.InstitutionNotFound:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
+            status_code=404,
             detail="Insitution not found",
         )
     except nordigen_erros.NordigenFailure:

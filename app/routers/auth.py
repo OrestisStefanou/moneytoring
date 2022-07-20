@@ -59,9 +59,3 @@ async def signup(user: User, session: AsyncSession = Depends(get_session)):
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Something went wrong, we are working on it",
         )
-
-
-# # This is for testing purposes
-@router.get("/users/me/", tags=["Authentication"])
-async def auth_test_endpoint(user_id = Depends(extract_user_id_from_token)):
-    return {"user_id": user_id}

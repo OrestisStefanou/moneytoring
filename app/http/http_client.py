@@ -46,7 +46,7 @@ class HttpClient:
         headers: Optional[Dict[str,Any]] = None,
         timeout: int = 5
     ) -> Dict[str,Any]:
-        json_response = await self._make_request(
+        response = await self._make_request(
             method="POST",
             endpoint=endpoint,
             json=json,
@@ -54,7 +54,7 @@ class HttpClient:
             headers=headers,
             timeout=timeout
         )
-        return json_response 
+        return response 
 
     async def get(
         self,
@@ -63,13 +63,13 @@ class HttpClient:
         headers: Optional[Dict[str,Any]] = None,
         timeout: int = 5
     ) -> Dict[str,Any]:
-        json_response = await self._make_request(
+        response = await self._make_request(
             method="GET",
             endpoint=endpoint,
             params=params,
             headers=headers,
             timeout=timeout
         )
-        return json_response
+        return response
     
     # TODO Add methods for other http methods

@@ -1,0 +1,1 @@
+from app.models.http.nordigen import Institution    # In this case the entity is the same as the model so we don't rewrite it

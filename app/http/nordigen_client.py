@@ -5,7 +5,7 @@ from typing import Dict,Any, List, Optional
 from app import settings
 from app.http.http_client import HttpClient
 from app.models.http.nordigen import NordigenToken, Institution
-from app.errors.nordigen import InvalidCountryCode, NordigenFailure, InstitutionNotFound
+from app.errors.nordigen import NordigenFailure
 from app.errors.http import HttpRequestError
 
 class NordigenClient(HttpClient):
@@ -21,24 +21,25 @@ class NordigenClient(HttpClient):
         }
         
         try:
-            json_response = await self.post(
+            response = await self.post(
                 endpoint="/token/new/",
                 json=json_data
-            ).json()
+            )
         except HttpRequestError as err:
             logging.error("Http call to get nordigen access token failed with:", str(err))
             return
 
-        self._headers = {"Authorization": f'Bearer {json_response["access"]}'}
+        token = response.json()
+        self._headers = {"Authorization": f'Bearer {token["access"]}'}
         """
         Nordigen returns the number of seconds that the token is valid
         so we add current timestamp to have expiration timestamp in our model
         """
         return NordigenToken(
-            access=json_response["access"],
-            access_expires=json_response["access_expires"] + time.time(),
-            refresh=json_response["refresh"],
-            refresh_expires=json_response["refresh_expires"] + time.time()
+            access=token["access"],
+            access_expires=token["access_expires"] + time.time(),
+            refresh=token["refresh"],
+            refresh_expires=token["refresh_expires"] + time.time()
         )
 
     async def _check_token_expiration(self) -> None:
@@ -66,7 +67,6 @@ class NordigenClient(HttpClient):
             return None
 
         institutions = response.json()
-        
         return [
             Institution(
                 id=institution['id'],

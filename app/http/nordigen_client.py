@@ -4,7 +4,12 @@ from typing import Dict,Any, List, Optional
 
 from app import settings
 from app.http.http_client import HttpClient
-from app.models.http.nordigen import NordigenToken, Institution
+from app.models.http.nordigen import (
+    NordigenToken,
+    Institution,
+    Requisition,
+    Agreement
+)
 from app.errors.nordigen import NordigenFailure
 from app.errors.http import HttpRequestError
 
@@ -47,7 +52,7 @@ class NordigenClient(HttpClient):
         if (self._token is None) or (current_ts > self._token.access_expires):
             self._token = await self._get_access_token()
             return
-    
+
     async def get_country_institutions(self,country_code: str) -> Optional[List[Institution]]:
         await self._check_token_expiration()
 
@@ -101,4 +106,60 @@ class NordigenClient(HttpClient):
             bic=institution['bic'],
             transaction_total_days=institution['transaction_total_days'],
             logo=institution['logo']
+        )
+
+
+    async def get_agreement_by_id(self, _id: str) -> Optional[Agreement]:
+        await self._check_token_expiration()
+
+        try:
+            response = await self.get(
+                endpoint=f'/agreements/enduser/{_id}/',
+                headers=self._headers,
+            )
+        except HttpRequestError as err:
+            logging.error("Http call to get agreement by id failed with:", str(err))
+            raise NordigenFailure("Call to get agreement by id failed")
+
+        if response.status_code == 404:
+            return None
+
+        agreement = response.json()
+
+        return Agreement(
+            id=agreement['id'],
+            created=agreement['created'],
+            max_historical_days=agreement['max_historical_days'],
+            access_valid_for_days=agreement['access_valid_for_days'],
+            access_scope=agreement['access_scope'],
+            accepted=agreement['accepted']
+        )
+
+
+    async def create_requisition(self, institution_id: str, redirect_uri: str) -> Requisition:
+        json_data = {
+            "redirect": redirect_uri,
+            "institution_id": institution_id,
+        }
+        
+        try:
+            response = await self.post(
+                endpoint="/requisitions/",
+                json=json_data,
+                headers=self._headers
+            )
+        except HttpRequestError as err:
+            logging.error("Http call to create nordigen requisition failed with:", str(err))
+            raise NordigenFailure("Call to create requisition failed")
+
+        requisition = response.json()
+        return Requisition(
+            id=requisition['id'],
+            created=requisition['created'],
+            redirect=requisition['redirect'],
+            status=requisition['status']['long'],
+            institution_id=requisition['institution_id'],
+            agreement_id=requisition['agreement'],
+            accounts=requisition['accounts'],
+            link=requisition['link']
         )

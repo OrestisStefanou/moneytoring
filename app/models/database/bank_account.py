@@ -6,5 +6,4 @@ class BankAccount(SQLModel, table=True):
     user_id: str = Field(foreign_key="appuser.user_id")
     requisition_id:str = Field(foreign_key="requisition.id")
     name: str
-    bank_name: str
     currency: str

@@ -1,6 +1,6 @@
 import logging
 import time
-from typing import Dict,Any, List, Optional
+from typing import List, Optional
 
 from app import settings
 from app.http.http_client import HttpClient
@@ -8,7 +8,8 @@ from app.models.http.nordigen import (
     NordigenToken,
     Institution,
     Requisition,
-    Agreement
+    Agreement,
+    AccountDetails
 )
 from app.errors.nordigen import NordigenFailure
 from app.errors.http import HttpRequestError
@@ -108,7 +109,6 @@ class NordigenClient(HttpClient):
             logo=institution['logo']
         )
 
-
     async def get_agreement_by_id(self, _id: str) -> Optional[Agreement]:
         await self._check_token_expiration()
 
@@ -135,6 +135,28 @@ class NordigenClient(HttpClient):
             accepted=agreement['accepted']
         )
 
+    async def get_account_details(self, account_id: str) -> Optional[AccountDetails]:
+        await self._check_token_expiration()
+
+        try:
+            response = await self.get(
+                endpoint=f'/accounts/{account_id}/details/',
+                headers=self._headers,
+            )
+        except HttpRequestError as err:
+            logging.error("Http call to get account details failed with:", str(err))
+            raise NordigenFailure("Call to get account details failed")
+
+        if response.status_code == 404:
+            return None
+
+        account_details = response.json()
+
+        return AccountDetails(
+            currency=account_details['currency'],
+            name=account_details['name'],
+            product=account_details['product']
+        )
 
     async def create_requisition(self, institution_id: str, redirect_uri: str) -> Requisition:
         json_data = {
@@ -153,6 +175,34 @@ class NordigenClient(HttpClient):
             raise NordigenFailure("Call to create requisition failed")
 
         requisition = response.json()
+        return Requisition(
+            id=requisition['id'],
+            created=requisition['created'],
+            redirect=requisition['redirect'],
+            status=requisition['status']['long'],
+            institution_id=requisition['institution_id'],
+            agreement_id=requisition['agreement'],
+            accounts=requisition['accounts'],
+            link=requisition['link']
+        )
+
+    async def get_requisition_by_id(self, _id: str) -> Optional[Requisition]:
+        await self._check_token_expiration()
+
+        try:
+            response = await self.get(
+                endpoint=f'/requisitions/{_id}/',
+                headers=self._headers,
+            )
+        except HttpRequestError as err:
+            logging.error("Http call to get requisition by id failed with:", str(err))
+            raise NordigenFailure("Call to get requisition failed")
+
+        if response.status_code == 404:
+            return None
+
+        requisition = response.json()
+
         return Requisition(
             id=requisition['id'],
             created=requisition['created'],

@@ -27,6 +27,12 @@ class Agreement(BaseModel):
     accepted: str
 
 
+class AccountDetails(BaseModel):
+    currency: str
+    name: str
+    product: str
+
+
 class Requisition(BaseModel):
     id: str
     created: str

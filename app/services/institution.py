@@ -1,6 +1,5 @@
 from typing import List, Optional
 from app.models.http.nordigen import Institution
-
 from app.repos.nordigen_repo import NordigenRepo
 
 

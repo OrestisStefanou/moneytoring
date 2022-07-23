@@ -16,7 +16,7 @@ class RequisitionRepo(SQLRepo):
         institution_id: str,
         institution_name: str,
         link: str
-    ):
+    ) -> Requisition:
         requisition = Requisition(
             id=_id,
             user_id=user_id,

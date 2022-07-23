@@ -19,5 +19,4 @@ class Requisition(SQLModel, table=True):
     status: RequisitionStatus = RequisitionStatus.not_linked
     created_at: Optional[str] = None     # Date in format YYYY-MM-DD
     expires_at: Optional[str] = None     # Date in format YYYY-MM-DD
-    currency: Optional[str] = None
     max_historical_days: Optional[int] = None

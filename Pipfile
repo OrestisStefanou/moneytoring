@@ -16,6 +16,7 @@ pytest = "*"
 requests = "*"
 pytest-asyncio = "*"
 httpx = "*"
+pytest-httpx = "*"
 
 [dev-packages]
 

@@ -179,7 +179,7 @@ class NordigenClient(HttpClient):
             id=requisition['id'],
             created=requisition['created'],
             redirect=requisition['redirect'],
-            status=requisition['status']['long'],
+            status=requisition['status'],
             institution_id=requisition['institution_id'],
             agreement_id=requisition['agreement'],
             accounts=requisition['accounts'],

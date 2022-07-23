@@ -8,12 +8,12 @@ from fastapi import APIRouter, Depends
 from app.controllers import auth as auth_controller
 from app.entities.app_user import User
 from app.entities.auth_token import Token
-from app.dependencies import get_session, extract_user_id_from_token
+from app.dependencies import get_session
 from app.errors import auth as auth_errors
 
-router  = APIRouter()
+router  = APIRouter(tags=["Authentication"])
 
-@router.post("/token", response_model=Token, tags=["Authentication"], status_code=200)
+@router.post("/token", response_model=Token, status_code=200)
 async def login_for_acess_token(
     session: AsyncSession = Depends(get_session), 
     form_data: OAuth2PasswordRequestForm = Depends()
@@ -39,7 +39,7 @@ async def login_for_acess_token(
     return token
 
 
-@router.post("/signup", tags=["Authentication"], status_code=201)
+@router.post("/signup", status_code=201)
 async def signup(user: User, session: AsyncSession = Depends(get_session)):
     try:
         await auth_controller.create_user(session=session, **user.dict())

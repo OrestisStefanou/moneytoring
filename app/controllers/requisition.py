@@ -1,3 +1,4 @@
+from typing import List
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.services import requisition as requisition_service
@@ -35,3 +36,17 @@ async def create_bank_connection(
         institution_name=internal_requisition.institution_name,
         link=internal_requisition.link
     )
+
+
+async def get_user_bank_connections(
+    session: AsyncSession,
+    user_id: str
+) -> List[BankConnection]:
+    user_requisitions = await requisition_service.get_requisitions_of_user(session, user_id)
+    for requisition in user_requisitions:
+        if requisition.status == "not_linked":
+            # Fetch requisition from nordigen to check for status update
+            pass
+
+        # Get requisition's accounts and stuff
+        

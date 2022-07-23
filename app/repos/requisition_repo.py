@@ -1,8 +1,9 @@
+from typing import Iterable
 from sqlmodel.ext.asyncio.session import AsyncSession
 from sqlmodel import select
 
 from app.repos.sql_repo import SQLRepo
-from app.models.database.requisition import Requisition
+from app.models.database.requisition import Requisition, RequisitionStatus
 
 
 class RequisitionRepo(SQLRepo):
@@ -27,4 +28,31 @@ class RequisitionRepo(SQLRepo):
 
         self._session.add(requisition)
         await self._session.commit()
+        return requisition
+
+    async def get_requisitions_of_user(self, user_id: str) -> Iterable[Requisition]:
+        statement = select(Requisition).where(Requisition.user_id == user_id)
+        user_requisitions = await self._session.exec(statement)
+        return user_requisitions
+
+    async def set_linked_status_info(
+        self,
+        _id: str,
+        created_at: str,
+        expires_at: str,
+        max_historical_days: str
+    ) -> Requisition:
+        """
+        Updates requisition's status to linked and sets
+        relevant information about the linking duration
+        """
+        requisition = await self.get(_id)
+        requisition.status = RequisitionStatus.linked
+        requisition.created_at = created_at
+        requisition.expires_at = expires_at
+        requisition.max_historical_days = max_historical_days
+
+        self._session.add(requisition)
+        await self._session.commit()
+        await self._session.refresh(requisition)
         return requisition

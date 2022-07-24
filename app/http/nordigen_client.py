@@ -153,9 +153,9 @@ class NordigenClient(HttpClient):
         account_details = response.json()
 
         return AccountDetails(
-            currency=account_details['currency'],
-            name=account_details['name'],
-            product=account_details['product']
+            currency=account_details['account']['currency'],
+            name=account_details['account']['name'],
+            product=account_details['account']['product']
         )
 
     async def create_requisition(self, institution_id: str, redirect_uri: str) -> Requisition:
@@ -207,7 +207,7 @@ class NordigenClient(HttpClient):
             id=requisition['id'],
             created=requisition['created'],
             redirect=requisition['redirect'],
-            status=requisition['status']['long'],
+            status=requisition['status'],
             institution_id=requisition['institution_id'],
             agreement_id=requisition['agreement'],
             accounts=requisition['accounts'],

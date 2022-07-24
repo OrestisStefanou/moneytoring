@@ -27,7 +27,7 @@ class BankConnection(BaseModel):
     institution_name: str
     link: str
     status: BankConnectionStatus = BankConnectionStatus.pending
-    created_at: Optional[str] = Field(default=None, description='Date in format YYYY-MM-DD')
+    accepted_at: Optional[str] = Field(default=None, description='Datetime in format YYYY-MM-DDTHH:MM:SS')
     expires_at: Optional[str] = Field(default=None, description='Date in format YYYY-MM-DD')
     max_historical_days: Optional[int] = None
     bank_accounts: Optional[List[BankAccount]] = None

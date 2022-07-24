@@ -17,6 +17,6 @@ class Requisition(SQLModel, table=True):
     institution_name: str
     link: str
     status: RequisitionStatus = RequisitionStatus.not_linked
-    created_at: Optional[str] = None     # Date in format YYYY-MM-DD
+    accepted_at: Optional[str] = None     # Datetime in format YYYY-MM-DDTHH:MM:SS
     expires_at: Optional[str] = None     # Date in format YYYY-MM-DD
     max_historical_days: Optional[int] = None

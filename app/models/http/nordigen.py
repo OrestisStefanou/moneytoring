@@ -22,7 +22,7 @@ class Agreement(BaseModel):
     id: str
     created: str
     max_historical_days: str
-    access_valid_for_days: str
+    access_valid_for_days: int
     access_scope: List[str]
     accepted: str
 

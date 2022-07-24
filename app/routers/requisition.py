@@ -1,4 +1,5 @@
 import logging
+from typing import List
 
 from sqlmodel.ext.asyncio.session import AsyncSession
 from fastapi import HTTPException,status
@@ -47,3 +48,32 @@ async def create_bank_connection(
         )
     
     return bank_connection
+
+
+@router.get(
+    "/bank_connections",
+    response_model=List[requisition_entities.BankConnection], 
+    status_code=200,
+)
+async def get_bank_connections_of_user(
+    session: AsyncSession = Depends(get_session),
+    user_id: str = Depends(extract_user_id_from_token)
+):
+    try:
+        bank_connections = await requisition_controller.get_user_bank_connections(
+            session=session,
+            user_id=user_id
+        )
+    except nordigen_errors.NordigenFailure:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Bank service is not responding, we are working on it",
+        )
+    except Exception as err:
+        logging.exception("Unexpected error during creating bank connection:", str(err))
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Something went wrong, we are working on it",
+        )
+    
+    return bank_connections

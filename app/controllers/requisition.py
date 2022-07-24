@@ -3,7 +3,8 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.services import requisition as requisition_service
 from app.services import institution as institution_service
-from app.entities.requisition import BankConnection
+from app.services import bank_account as bank_account_service
+from app.entities.requisition import BankConnection, BankAccount
 from app.errors.institution import InstitutionNotFound
 
 
@@ -42,11 +43,30 @@ async def get_user_bank_connections(
     session: AsyncSession,
     user_id: str
 ) -> List[BankConnection]:
+    bank_connections = []
     user_requisitions = await requisition_service.get_requisitions_of_user(session, user_id)
     for requisition in user_requisitions:
-        if requisition.status == "not_linked":
-            # Fetch requisition from nordigen to check for status update
-            pass
+        requistion_bank_accounts = await bank_account_service.get_requistion_bank_accounts(
+            session=session,
+            requisition_id=requisition.id
+        )
+        bank_connections.append(
+            BankConnection(
+                id=requisition.id,
+                institution_name=requisition.institution_name,
+                link=requisition.link,
+                accepted_at=requisition.accepted_at,
+                expires_at=requisition.expires_at,
+                max_historical_days=requisition.max_historical_days,
+                bank_accounts=[
+                    BankAccount(
+                        account_id=bank_account.account_id,
+                        name=bank_account.name,
+                        currency=bank_account.currency
+                    )
+                    for bank_account in requistion_bank_accounts
+                ]
+            )
+        )
 
-        # Get requisition's accounts and stuff
-        
+    return bank_connections

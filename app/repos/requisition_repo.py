@@ -38,7 +38,7 @@ class RequisitionRepo(SQLRepo):
     async def set_linked_status_info(
         self,
         _id: str,
-        created_at: str,
+        accepted_at: str,
         expires_at: str,
         max_historical_days: str
     ) -> Requisition:
@@ -48,7 +48,7 @@ class RequisitionRepo(SQLRepo):
         """
         requisition = await self.get(_id)
         requisition.status = RequisitionStatus.linked
-        requisition.created_at = created_at
+        requisition.accepted_at = accepted_at
         requisition.expires_at = expires_at
         requisition.max_historical_days = max_historical_days
 

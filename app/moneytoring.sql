@@ -13,7 +13,7 @@ CREATE TABLE Requisition (
 	link TEXT NOT NULL,
 	status TEXT NOT NULL,
 	max_historical_days INT,
-	created_at TEXT,
+	accepted_at TEXT,
 	expires_at TEXT,
     FOREIGN KEY (user_id)
     REFERENCES AppUser (user_id) 

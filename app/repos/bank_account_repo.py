@@ -1,3 +1,4 @@
+from typing import Iterable
 from sqlmodel.ext.asyncio.session import AsyncSession
 from sqlmodel import select
 
@@ -25,3 +26,11 @@ class BankAccountRepo(SQLRepo):
         self._session.add(bank_account)
         await self._session.commit()
         return bank_account
+
+    async def get_accounts_by_requisition_id(
+        self,
+        requistion_id: str,
+    ) -> Iterable[BankAccount]:
+        statement = select(BankAccount).where(BankAccount.requisition_id == requistion_id)
+        bank_accounts = await self._session.exec(statement)
+        return bank_accounts

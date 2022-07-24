@@ -4,6 +4,7 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 from app.services import requisition as requisition_service
 from app.services import institution as institution_service
 from app.services import bank_account as bank_account_service
+from app.utils import requisition as requisition_utils
 from app.entities.requisition import BankConnection, BankAccount
 from app.errors.institution import InstitutionNotFound
 
@@ -50,6 +51,7 @@ async def get_user_bank_connections(
             session=session,
             requisition_id=requisition.id
         )
+
         bank_connections.append(
             BankConnection(
                 id=requisition.id,
@@ -58,6 +60,7 @@ async def get_user_bank_connections(
                 accepted_at=requisition.accepted_at,
                 expires_at=requisition.expires_at,
                 max_historical_days=requisition.max_historical_days,
+                status=requisition_utils.map_req_status_to_bank_conn_status(requisition.status),
                 bank_accounts=[
                     BankAccount(
                         account_id=bank_account.account_id,

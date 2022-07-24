@@ -27,18 +27,15 @@ async def get_requisitions_of_user(session: AsyncSession, user_id: str) -> List[
     user_requisitions = []
     for internal_requisition in internal_requisitions:
         if internal_requisition.status == db_requisition.RequisitionStatus.not_linked:
-            print("FETCHING REQUISITIONS FROM NORDGIEN")
             # Fetch requistion from nordigen to check for status update
             nordigen_requisition = await fetch_requisition_from_nordigen(internal_requisition.id)
             if nordigen_requisition.status == "LN":
-                print("UPDATING INTERNAL REQUISITIONS")
                 # Status is updated to linked so we have to update ours internally
                 internal_requisition = await mark_internal_requisition_as_linked(
                     session=session,
                     requisition_id=internal_requisition.id,
                     agreement_id=nordigen_requisition.agreement_id
                 )
-                print("FETCHING THE ACCOUNTS")
                 # Fetch the requisition's account from nordigen
                 for account_id in nordigen_requisition.accounts:
                     account_details = await bank_account_service.get_account_details_from_nordigen(account_id)

@@ -11,7 +11,7 @@ from app.models.http.nordigen import (
     Agreement,
     AccountDetails
 )
-from app.errors.nordigen import NordigenFailure
+from app.errors.nordigen import NordigenFailure, RequisitionNotFound
 from app.errors.http import HttpRequestError
 
 class NordigenClient(HttpClient):
@@ -213,3 +213,18 @@ class NordigenClient(HttpClient):
             accounts=requisition['accounts'],
             link=requisition['link']
         )
+
+    async def delete_requisition_by_id(self, _id: str) -> None:
+        await self._check_token_expiration()
+
+        try:
+            response = await self.delete(
+                endpoint=f'/requisitions/{_id}/',
+                headers=self._headers,
+            )
+        except HttpRequestError as err:
+            logging.error("Http call to delete requisition by id failed with:", str(err))
+            raise NordigenFailure("Call to delete requisition failed")
+
+        if response.status_code == 404:
+            raise RequisitionNotFound()

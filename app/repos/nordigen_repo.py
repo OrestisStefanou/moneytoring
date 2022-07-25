@@ -36,3 +36,6 @@ class NordigenRepo(HTTPRepo):
     async def get_agreement_by_id(self, _id: str) -> Optional[Agreement]:
         agreement = await self._client.get_agreement_by_id(_id)
         return agreement
+    
+    async def delete_requisition_by_id(self, _id: str) -> None:
+        await self._client.delete_requisition_by_id(_id)

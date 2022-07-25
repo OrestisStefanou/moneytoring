@@ -1,0 +1,2 @@
+class BankConnectionNotFound(Exception):
+    pass

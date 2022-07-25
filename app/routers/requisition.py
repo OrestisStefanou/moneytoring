@@ -1,5 +1,6 @@
 import logging
 from typing import List
+import uuid
 
 from sqlmodel.ext.asyncio.session import AsyncSession
 from fastapi import HTTPException,status
@@ -9,6 +10,7 @@ from app.controllers import requisition as requisition_controller
 from app.entities import requisition as requisition_entities
 from app.errors import nordigen as nordigen_errors
 from app.errors import institution as institution_errros
+from app.errors import requisition as requisition_errors
 from app.dependencies import get_session, extract_user_id_from_token
 
 router = APIRouter(tags=['Bank Connection'])
@@ -77,3 +79,33 @@ async def get_bank_connections_of_user(
         )
     
     return bank_connections
+
+
+@router.delete(
+    "/bank_connections/{bank_connection_id}",
+    response_model=None,
+    status_code=200
+)
+async def delete_bank_connection(
+    bank_connection_id: uuid.UUID,
+    session: AsyncSession = Depends(get_session),
+    _: str = Depends(extract_user_id_from_token)
+):
+    try:
+        await requisition_controller.delete_bank_connection(session=session, bank_connection_id=str(bank_connection_id))
+    except requisition_errors.BankConnectionNotFound:
+        raise  HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Bank connection with given id doesn't exist",
+        )
+    except nordigen_errors.NordigenFailure:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Bank service is not responding, we are working on it",
+        )
+    except Exception as err:
+        logging.exception("Unexpected error during deleting bank connection:", str(err))
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Something went wrong, we are working on it",
+        )

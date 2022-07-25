@@ -7,6 +7,8 @@ from app.services import bank_account as bank_account_service
 from app.utils import requisition as requisition_utils
 from app.entities.requisition import BankConnection, BankAccount
 from app.errors.institution import InstitutionNotFound
+from app.errors.requisition import BankConnectionNotFound
+from app.errors.nordigen import RequisitionNotFound
 
 
 async def create_bank_connection(
@@ -73,3 +75,12 @@ async def get_user_bank_connections(
         )
 
     return bank_connections
+
+
+async def delete_bank_connection(session: AsyncSession, bank_connection_id: str) -> None:
+    try:
+        await requisition_service.delete_requisition_from_nordigen(bank_connection_id)
+    except RequisitionNotFound:
+        #raise BankConnectionNotFound()
+        pass
+    await requisition_service.delete_internal_requisition(session=session,requisition_id=bank_connection_id)

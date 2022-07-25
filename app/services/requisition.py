@@ -91,3 +91,18 @@ async def mark_internal_requisition_as_linked(
         max_historical_days=agreement.max_historical_days
     )
     return requisition
+
+
+async def delete_requisition_from_nordigen(
+    requisition_id: str
+) -> None:
+    nordigen_repo = NordigenRepo()
+    await nordigen_repo.delete_requisition_by_id(requisition_id)
+
+
+async def delete_internal_requisition(
+    session: AsyncSession,
+    requisition_id: str,   
+) -> None:
+    requisition_repo = RequisitionRepo(session)
+    await requisition_repo.delete_requisition_by_id(requisition_id)

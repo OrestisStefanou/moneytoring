@@ -5,3 +5,6 @@ class NordigenFailure(Exception):
     http call to Nordigen fails to complete
     """
     pass
+
+class RequisitionNotFound(Exception):
+    pass

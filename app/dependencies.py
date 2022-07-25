@@ -18,6 +18,7 @@ async def get_session():
         bind=engine, class_=AsyncSession, expire_on_commit=False
     )
     async with async_session() as session:
+        await session.exec("PRAGMA foreign_keys = ON")  # THIS SHOULD BE DELETED WHEN WE TRANSITION FROM SQLITE
         yield session
 
 

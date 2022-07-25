@@ -71,5 +71,21 @@ class HttpClient:
             timeout=timeout
         )
         return response
-    
+
+    async def delete(
+        self,
+        endpoint: str,
+        params: Optional[Dict[str,Any]] = None,
+        headers: Optional[Dict[str,Any]] = None,
+        timeout: int = 5
+    ) -> Dict[str,Any]:
+        response = await self._make_request(
+            method="DELETE",
+            endpoint=endpoint,
+            params=params,
+            headers=headers,
+            timeout=timeout
+        )
+        return response
+
     # TODO Add methods for other http methods

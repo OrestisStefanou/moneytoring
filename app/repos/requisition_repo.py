@@ -1,4 +1,6 @@
 from typing import Iterable
+
+from requests import session
 from sqlmodel.ext.asyncio.session import AsyncSession
 from sqlmodel import select
 
@@ -56,3 +58,8 @@ class RequisitionRepo(SQLRepo):
         await self._session.commit()
         await self._session.refresh(requisition)
         return requisition
+
+    async def delete_requisition_by_id(self, _id: str) -> None:
+        requisition = await self.get(_id)
+        await self._session.delete(requisition)
+        await self._session.commit()

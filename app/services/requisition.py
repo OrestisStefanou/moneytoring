@@ -103,6 +103,7 @@ async def delete_requisition_from_nordigen(
 async def delete_internal_requisition(
     session: AsyncSession,
     requisition_id: str,   
-) -> None:
+) -> Optional[db_requisition.Requisition]:
     requisition_repo = RequisitionRepo(session)
-    await requisition_repo.delete_requisition_by_id(requisition_id)
+    deleted_requisition = await requisition_repo.delete_requisition_by_id(requisition_id)
+    return deleted_requisition

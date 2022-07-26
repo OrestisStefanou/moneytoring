@@ -18,7 +18,8 @@ class SQLRepo:
     async def get(self, _id: Any) -> Any:
         """
         Get a single row by its primary key
-        Returns an SQLModel of this row
+        Returns an SQLModel of this row or None if row
+        doesn't exist
         """
         result = await self._session.get(self._model, _id)
         return result

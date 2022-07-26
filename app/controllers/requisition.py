@@ -81,6 +81,17 @@ async def delete_bank_connection(session: AsyncSession, bank_connection_id: str)
     try:
         await requisition_service.delete_requisition_from_nordigen(bank_connection_id)
     except RequisitionNotFound:
-        #raise BankConnectionNotFound()
+        """
+        We don't raise an exception here yet to cover the case that the requisition
+        was deleted from nordigen but not on our side(This could happen if for some reason whenn 
+        we deleted the requisition from nordigen the function call below failed)
+        """
         pass
-    await requisition_service.delete_internal_requisition(session=session,requisition_id=bank_connection_id)
+    
+    deleted_requisition = await requisition_service.delete_internal_requisition(
+        session=session,
+        requisition_id=bank_connection_id
+    )
+
+    if deleted_requisition is None:
+        raise BankConnectionNotFound()

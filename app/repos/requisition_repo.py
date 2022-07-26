@@ -1,4 +1,4 @@
-from typing import Iterable
+from typing import Iterable, Optional
 
 from requests import session
 from sqlmodel.ext.asyncio.session import AsyncSession
@@ -59,7 +59,14 @@ class RequisitionRepo(SQLRepo):
         await self._session.refresh(requisition)
         return requisition
 
-    async def delete_requisition_by_id(self, _id: str) -> None:
+    async def delete_requisition_by_id(self, _id: str) -> Optional[Requisition]:
+        """
+        Returns the deleted requisition or None in case the requisition doesn't exist
+        """
         requisition = await self.get(_id)
+        if requisition is None:
+            return None
+
         await self._session.delete(requisition)
         await self._session.commit()
+        return requisition

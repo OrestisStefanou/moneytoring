@@ -1,4 +1,5 @@
 from typing import List
+
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.services import requisition as requisition_service
@@ -9,6 +10,7 @@ from app.entities.requisition import BankConnection, BankAccount
 from app.errors.institution import InstitutionNotFound
 from app.errors.requisition import BankConnectionNotFound
 from app.errors.nordigen import RequisitionNotFound
+from app.models.database.requisition import Requisition as DbRequisition
 
 
 async def create_bank_connection(
@@ -77,7 +79,7 @@ async def get_user_bank_connections(
     return bank_connections
 
 
-async def delete_bank_connection(session: AsyncSession, bank_connection_id: str) -> None:
+async def delete_bank_connection(session: AsyncSession, bank_connection_id: str) -> DbRequisition:
     try:
         await requisition_service.delete_requisition_from_nordigen(bank_connection_id)
     except RequisitionNotFound:
@@ -95,3 +97,25 @@ async def delete_bank_connection(session: AsyncSession, bank_connection_id: str)
 
     if deleted_requisition is None:
         raise BankConnectionNotFound()
+    
+    return deleted_requisition
+
+
+async def update_expired_bank_connection(session: AsyncSession, bank_connection_id: str, user_id: str) -> BankConnection:
+    """
+    What happens here
+    1. Delete requisition from nordigen
+    2. Delete the internal requisition
+    3. Create a new requisition in nordigen for the same bank
+    4. Create an internal requisition
+    5. Send back the new bank connection
+    """
+    deleted_requisition = await delete_bank_connection(session, bank_connection_id)
+    new_bank_connection = await create_bank_connection(
+        session=session,
+        user_id=user_id,
+        institution_id=deleted_requisition.institution_id,
+        redirect_uri=deleted_requisition.link
+    )
+
+    return new_bank_connection

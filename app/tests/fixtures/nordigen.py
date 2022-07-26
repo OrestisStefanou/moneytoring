@@ -85,3 +85,27 @@ def nordigen_get_institution_by_id_not_found(httpx_mock: HTTPXMock):
         json={},
         status_code=404,
     )
+
+
+@pytest.fixture(scope="function")
+def create_nordigen_requisition(httpx_mock: HTTPXMock):
+    httpx_mock.add_response(
+        url="https://ob.nordigen.com/api/v2/requisitions/",
+        method="POST",
+        json={
+            "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+            "created": "2022-07-26T09:44:24.664Z",
+            "redirect": "www.some_website.com",
+            "status": "CR",
+            "institution_id": "anavarkos_bank",
+            "agreement": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+            "reference": None,
+            "accounts": [],
+            "user_language": "klingon",
+            "link": "https://ob.nordigen.com/psd2/start/3fa85f64-5717-4562-b3fc-2c963f66afa6/anavarkos_bank",
+            "ssn": "string",
+            "account_selection": False,
+            "redirect_immediate": False
+        },
+        status_code=200
+    )

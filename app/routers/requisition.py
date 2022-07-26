@@ -16,7 +16,7 @@ from app.dependencies import get_session, extract_user_id_from_token
 router = APIRouter(tags=['Bank Connection'])
 
 @router.post(
-    "/bank_connection",
+    "/bank_connections",
     response_model=requisition_entities.BankConnection, 
     status_code=201,
 )

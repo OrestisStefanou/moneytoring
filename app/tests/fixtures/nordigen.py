@@ -97,7 +97,7 @@ def create_nordigen_requisition(httpx_mock: HTTPXMock):
             "created": "2022-07-26T09:44:24.664Z",
             "redirect": "www.some_website.com",
             "status": "CR",
-            "institution_id": "anavarkos_bank",
+            "institution_id": "ASTROBANK_PIRBCY2N",
             "agreement": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
             "reference": None,
             "accounts": [],
@@ -107,5 +107,5 @@ def create_nordigen_requisition(httpx_mock: HTTPXMock):
             "account_selection": False,
             "redirect_immediate": False
         },
-        status_code=200
+        status_code=201
     )

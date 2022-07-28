@@ -18,8 +18,7 @@ def nordigen_token(httpx_mock: HTTPXMock):
     )
 
 
-@pytest.fixture(scope="function")
-def nordigen_country_institutions(httpx_mock: HTTPXMock):
+def mock_nordigen_get_country_institutions(httpx_mock: HTTPXMock):
     httpx_mock.add_response(
         url="https://ob.nordigen.com/api/v2/institutions/?country=CY",
         method="GET",

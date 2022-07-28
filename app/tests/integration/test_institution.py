@@ -1,8 +1,9 @@
 import pytest
+from pytest_httpx import HTTPXMock
 
 from app.tests.fixtures.nordigen import (
     nordigen_token,
-    nordigen_country_institutions,
+    mock_nordigen_get_country_institutions,
     nordigen_country_institutions_400,
     nordigen_get_institution_by_id,
     nordigen_get_institution_by_id_not_found
@@ -19,10 +20,13 @@ class TestGetCountryInstitutions:
     def test_success(
         self,
         test_client,
+        httpx_mock: HTTPXMock,
         authenticated_user,
         nordigen_token,
         nordigen_country_institutions,
     ):
+        # Prepare
+        mock_nordigen_get_country_institutions(httpx_mock)
         response = test_client.get("/institutions?country_code=CY")
         assert response.status_code == 200
         assert response.json() == [

@@ -109,3 +109,48 @@ def create_nordigen_requisition(httpx_mock: HTTPXMock):
         },
         status_code=201
     )
+
+
+@pytest.fixture(scope="function")
+def get_requisition_with_linked_status(httpx_mock: HTTPXMock, requisition_id: str):
+    httpx_mock.add_response(
+        url=f"https://ob.nordigen.com/api/v2/requisitions/{requisition_id}/",
+        method="GET",
+        json={
+            "id": requisition_id,
+            "created": "2022-07-25T19:15:20.624770Z",
+            "redirect": "https://www.some_website.com",
+            "status": "LN",
+            "institution_id": "SANDBOXFINANCE_SFIN0000",
+            "agreement": "3eef47d9-99e8-4a05-88a1-39f95ed84fad",
+            "reference": "d2dee8cf-e9c3-4e72-afd6-ae5f801a3ab5",
+            "accounts": [
+                "7e944232-bda9-40bc-b784-660c7ab5fe78",
+                "99a0bfe2-0bef-46df-bff2-e9ae0c6c5838"
+            ],
+            "link": "https://ob.nordigen.com/psd2/start/d2dee8cf-e9c3-4e72-afd6-ae5f801a3ab5/SANDBOXFINANCE_SFIN0000",
+            "ssn": None,
+            "account_selection": None,
+            "redirect_immediate": None
+            },
+        status_code=200
+    )
+
+
+def get_account_details(httpx_mock: HTTPXMock, account_id: str):
+    httpx_mock.add_response(
+        url=f"https://ob.nordigen.com/api/v2/accounts/{account_id}/details/",
+        method="GET",
+        json={
+            "account": {
+                "resourceId": "01F3NS4YV94RA29YCH8R0F6BMF",
+                "iban": "GL3343697694912188",
+                "currency": "EUR",
+                "ownerName": "John Doe",
+                "name": "Main Account",
+                "product": "Checkings",
+                "cashAccountType": "CACC"
+            }
+        },
+        status_code=200
+    )

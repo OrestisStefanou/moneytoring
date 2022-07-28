@@ -16,6 +16,8 @@ from app.tests.fixtures.app_fixtures import (
     assert_all_responses_were_requested
 )
 from app.repos.requisition_repo import RequisitionRepo
+from app.repos.bank_account_repo import BankAccountRepo
+from app.models.database.requisition import Requisition, RequisitionStatus
 
 
 class TestCreateBankConnection:
@@ -80,3 +82,64 @@ class TestCreateBankConnection:
         requisition_repo = RequisitionRepo(async_session)
         requisitions = await requisition_repo.get_all()
         assert requisitions == []
+
+
+class TestGetBankConnection:
+    @pytest.mark.asyncio
+    async def test_get_all_linked_status(
+        self,
+        test_client,
+        test_db,
+        async_session,
+        authenticated_user,
+    ):
+        # Prepare
+        requisiiton_repo = RequisitionRepo(async_session)
+        bank_account_repo = BankAccountRepo(async_session)
+        for i in range(2):
+            requisition = Requisition(
+                id=f"requisition_id_{i}",
+                user_id="test_user_id",
+                institution_id=f"institution_id_{i}",
+                institution_name=f"institution_name_{i}",
+                link="www.redirect_link.com",
+                status=RequisitionStatus.linked,
+                accepted_at="2022-07-28",
+                expires_at="2022-10-28",
+                max_historical_days=90
+            )
+            async_session.add(requisition)
+            await async_session.commit()
+        
+        for i in range(2):
+            await bank_account_repo.add(
+                account_id=f"account_id_{i}",
+                requistion_id=f"requisition_id_{i}",
+                name="Main account",
+                currency="Euro"
+            )
+        # act
+        response = test_client.get("/bank_connections")
+
+        assert response.status_code == 200
+        assert response.json() == [
+            {
+                'accepted_at': '2022-07-28',
+                'bank_accounts':[{'account_id': 'account_id_0','currency': 'Euro','name': 'Main account'}],
+                'expires_at': '2022-10-28','id': 'requisition_id_0',
+                'institution_name': 'institution_name_0',
+                'link': 'www.redirect_link.com',
+                'max_historical_days': 90,
+                'status': 'created'
+            },
+            {
+                'accepted_at': '2022-07-28',
+                'bank_accounts': [{'account_id': 'account_id_1','currency': 'Euro','name': 'Main account'}],
+                'expires_at': '2022-10-28',
+                'id': 'requisition_id_1',
+                'institution_name': 'institution_name_1',
+                'link': 'www.redirect_link.com',
+                'max_historical_days': 90,
+                'status': 'created'
+            }
+        ]

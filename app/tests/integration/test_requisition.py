@@ -158,16 +158,14 @@ class TestGetBankConnection:
     ):
         # Prepare
         # Create internal requisition with not_linked status
-        requisition = Requisition(
-            id=f"requisition_id",
+        requisition_repo = RequisitionRepo(async_session)
+        await requisition_repo.add(
+            _id="requisition_id",
             user_id="test_user_id",
             institution_id="institution_id",
             institution_name="ANAVARKOS BANK",
-            link="www.redirect_link.com",
-            status=RequisitionStatus.not_linked,
+            link="www.redirect_link.com"
         )
-        async_session.add(requisition)
-        await async_session.commit()
 
         # Mock nordigen responses
         get_requisition_with_linked_status(
@@ -183,18 +181,21 @@ class TestGetBankConnection:
             agreement_id="agreement_id"
         )
 
-        get_account_details(
-            httpx_mock=httpx_mock,
-            account_id="account1_id"
-        )
-
-        get_account_details(
-            httpx_mock=httpx_mock,
-            account_id="account2_id"
-        )
+        for i in range(1,3):
+            get_account_details(
+                httpx_mock=httpx_mock,
+                account_id=f"account{i}_id"
+            )
 
         # act
         response = test_client.get("/bank_connections")
+
+        # Make sure that the internal requisition is updated
+        internal_requisition = await requisition_repo.get("requisition_id")
+        assert internal_requisition.status == "linked"
+        assert internal_requisition.accepted_at == "2022-07-25"
+        assert internal_requisition.expires_at == "2022-10-23"
+        assert internal_requisition.max_historical_days == 90
 
         assert response.status_code == 200
         assert response.json() == [

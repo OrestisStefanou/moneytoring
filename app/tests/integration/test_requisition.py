@@ -1,10 +1,14 @@
 import pytest
+from pytest_httpx import HTTPXMock
 
 from app.tests.fixtures.nordigen import (
     nordigen_token,
     create_nordigen_requisition,
     nordigen_get_institution_by_id,
-    nordigen_get_institution_by_id_not_found
+    nordigen_get_institution_by_id_not_found,
+    get_requisition_with_linked_status,
+    get_account_details,
+    get_nordigen_agreement
 )
 
 from app.tests.fixtures.app_fixtures import (
@@ -94,7 +98,6 @@ class TestGetBankConnection:
         authenticated_user,
     ):
         # Prepare
-        requisiiton_repo = RequisitionRepo(async_session)
         bank_account_repo = BankAccountRepo(async_session)
         for i in range(2):
             requisition = Requisition(
@@ -142,4 +145,70 @@ class TestGetBankConnection:
                 'max_historical_days': 90,
                 'status': 'created'
             }
+        ]
+
+    @pytest.mark.asyncio
+    async def test_get_not_linked_status(
+        self,
+        test_client,
+        test_db,
+        async_session,
+        authenticated_user,
+        httpx_mock: HTTPXMock
+    ):
+        # Prepare
+        # Create internal requisition with not_linked status
+        requisition = Requisition(
+            id=f"requisition_id",
+            user_id="test_user_id",
+            institution_id="institution_id",
+            institution_name="ANAVARKOS BANK",
+            link="www.redirect_link.com",
+            status=RequisitionStatus.not_linked,
+        )
+        async_session.add(requisition)
+        await async_session.commit()
+
+        # Mock nordigen responses
+        get_requisition_with_linked_status(
+            httpx_mock=httpx_mock,
+            requisition_id="requisition_id",
+            institution_id="institution_id",
+            accounts=["account1_id", "account2_id"],
+            agreement_id="agreement_id"            
+        )
+
+        get_nordigen_agreement(
+            httpx_mock=httpx_mock,
+            agreement_id="agreement_id"
+        )
+
+        get_account_details(
+            httpx_mock=httpx_mock,
+            account_id="account1_id"
+        )
+
+        get_account_details(
+            httpx_mock=httpx_mock,
+            account_id="account2_id"
+        )
+
+        # act
+        response = test_client.get("/bank_connections")
+
+        assert response.status_code == 200
+        assert response.json() == [
+            {
+                'accepted_at': '2022-07-25',
+                'bank_accounts':[
+                    {'account_id': 'account1_id','currency': 'EUR','name': 'Main Account'},
+                    {'account_id': 'account2_id','currency': 'EUR','name': 'Main Account'}
+                ],
+                'expires_at': '2022-10-23',
+                'id': 'requisition_id',
+                'institution_name': 'ANAVARKOS BANK',
+                'link': 'www.redirect_link.com',
+                'max_historical_days': 90,
+                'status': 'created'
+            },
         ]

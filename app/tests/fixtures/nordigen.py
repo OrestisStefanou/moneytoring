@@ -1,3 +1,4 @@
+from typing import List, Optional
 import pytest
 
 from pytest_httpx import HTTPXMock
@@ -111,8 +112,19 @@ def create_nordigen_requisition(httpx_mock: HTTPXMock):
     )
 
 
-@pytest.fixture(scope="function")
-def get_requisition_with_linked_status(httpx_mock: HTTPXMock, requisition_id: str):
+def get_requisition_with_linked_status(
+    httpx_mock: HTTPXMock,
+    requisition_id: str,
+    institution_id: Optional[str] = "SANDBOXFINANCE_SFIN0000",
+    accounts: Optional[List[str]] = None,
+    agreement_id: Optional[str] = "3eef47d9-99e8-4a05-88a1-39f95ed84fad"
+):
+    if accounts is None:
+        accounts = [
+            "7e944232-bda9-40bc-b784-660c7ab5fe78",
+            "99a0bfe2-0bef-46df-bff2-e9ae0c6c5838"
+        ]
+
     httpx_mock.add_response(
         url=f"https://ob.nordigen.com/api/v2/requisitions/{requisition_id}/",
         method="GET",
@@ -121,13 +133,10 @@ def get_requisition_with_linked_status(httpx_mock: HTTPXMock, requisition_id: st
             "created": "2022-07-25T19:15:20.624770Z",
             "redirect": "https://www.some_website.com",
             "status": "LN",
-            "institution_id": "SANDBOXFINANCE_SFIN0000",
-            "agreement": "3eef47d9-99e8-4a05-88a1-39f95ed84fad",
+            "institution_id": institution_id,
+            "agreement": agreement_id,
             "reference": "d2dee8cf-e9c3-4e72-afd6-ae5f801a3ab5",
-            "accounts": [
-                "7e944232-bda9-40bc-b784-660c7ab5fe78",
-                "99a0bfe2-0bef-46df-bff2-e9ae0c6c5838"
-            ],
+            "accounts": accounts,
             "link": "https://ob.nordigen.com/psd2/start/d2dee8cf-e9c3-4e72-afd6-ae5f801a3ab5/SANDBOXFINANCE_SFIN0000",
             "ssn": None,
             "account_selection": None,
@@ -146,11 +155,32 @@ def get_account_details(httpx_mock: HTTPXMock, account_id: str):
                 "resourceId": "01F3NS4YV94RA29YCH8R0F6BMF",
                 "iban": "GL3343697694912188",
                 "currency": "EUR",
-                "ownerName": "John Doe",
+                "ownerName": "Lionel Messi",
                 "name": "Main Account",
                 "product": "Checkings",
                 "cashAccountType": "CACC"
             }
+        },
+        status_code=200
+    )
+
+
+def get_nordigen_agreement(httpx_mock: HTTPXMock, agreement_id: str):
+    httpx_mock.add_response(
+        url=f"https://ob.nordigen.com/api/v2/agreements/enduser/{agreement_id}/",
+        method="GET",
+        json={
+            "id": "3eef47d9-99e8-4a05-88a1-39f95ed84fad",
+            "created": "2022-07-25T19:15:40.234163Z",
+            "max_historical_days": 90,
+            "access_valid_for_days": 90,
+            "access_scope": [
+                "balances",
+                "details",
+                "transactions"
+            ],
+            "accepted": "2022-07-25",
+            "institution_id": "SANDBOXFINANCE_SFIN0000"
         },
         status_code=200
     )

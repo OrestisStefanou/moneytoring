@@ -85,11 +85,11 @@ async def delete_bank_connection(session: AsyncSession, bank_connection_id: str)
     except RequisitionNotFound:
         """
         We don't raise an exception here yet to cover the case that the requisition
-        was deleted from nordigen but not on our side(This could happen if for some reason whenn 
+        was deleted from nordigen but not on our side(This could happen if for some reason when
         we deleted the requisition from nordigen the function call below failed)
         """
         pass
-    
+        
     deleted_requisition = await requisition_service.delete_internal_requisition(
         session=session,
         requisition_id=bank_connection_id

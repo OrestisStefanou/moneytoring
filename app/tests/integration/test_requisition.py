@@ -3,12 +3,12 @@ from pytest_httpx import HTTPXMock
 
 from app.tests.fixtures.nordigen import (
     nordigen_token,
-    create_nordigen_requisition,
-    nordigen_get_institution_by_id,
-    nordigen_get_institution_by_id_not_found,
-    get_requisition_with_linked_status,
-    get_account_details,
-    get_nordigen_agreement
+    mock_create_nordigen_requisition,
+    mock_nordigen_get_institution_by_id,
+    mock_nordigen_get_institution_by_id_not_found,
+    mock_get_requisition_with_linked_status,
+    mock_get_account_details,
+    mock_get_nordigen_agreement
 )
 
 from app.tests.fixtures.app_fixtures import (
@@ -33,21 +33,26 @@ class TestCreateBankConnection:
         async_session,
         authenticated_user,
         nordigen_token,
-        create_nordigen_requisition,
-        nordigen_get_institution_by_id
+        httpx_mock: HTTPXMock
     ):
+        # Prepare
+        mock_create_nordigen_requisition(httpx_mock, "ASTROBANK_PIRBCY2N")
+        mock_nordigen_get_institution_by_id(httpx_mock, "ASTROBANK_PIRBCY2N", "Astrobank")
+
+        # Act
         response = test_client.post(
             "/bank_connections",
             json={"institution_id": "ASTROBANK_PIRBCY2N", "redirect_uri": "www.some_website.com"}
         )
 
+        # Assert
         assert response.status_code == 201
         assert response.json() == {
             'accepted_at': None,
             'bank_accounts': None,
             'expires_at': None,
             'id': '3fa85f64-5717-4562-b3fc-2c963f66afa6',
-            'institution_name': 'AstroBank',
+            'institution_name': 'Astrobank',
             'link': 'https://ob.nordigen.com/psd2/start/3fa85f64-5717-4562-b3fc-2c963f66afa6/anavarkos_bank',
             'max_historical_days': None,
             'status': 'pending'
@@ -61,7 +66,7 @@ class TestCreateBankConnection:
         assert requisition.status == "not_linked"
         assert requisition.expires_at is None
         assert requisition.max_historical_days is None
-        assert requisition.institution_name == "AstroBank"
+        assert requisition.institution_name == "Astrobank"
         assert requisition.user_id == "test_user_id"
 
     @pytest.mark.asyncio
@@ -72,13 +77,18 @@ class TestCreateBankConnection:
         async_session,
         authenticated_user,
         nordigen_token,
-        nordigen_get_institution_by_id_not_found
+        httpx_mock: HTTPXMock
     ):
+        # Prepare
+        mock_nordigen_get_institution_by_id_not_found(httpx_mock, "ANAVARKOS_BANK")
+        
+        # Act
         response = test_client.post(
             "/bank_connections",
-            json={"institution_id": "ASTROBANK_PIRBCY2N", "redirect_uri": "www.some_website.com"}
+            json={"institution_id": "ANAVARKOS_BANK", "redirect_uri": "www.some_website.com"}
         )
-
+        
+        # Assert
         assert response.status_code == 400
         assert response.json()['detail'] == "Insitution with given id doesn't exist"
 
@@ -168,7 +178,7 @@ class TestGetBankConnection:
         )
 
         # Mock nordigen responses
-        get_requisition_with_linked_status(
+        mock_get_requisition_with_linked_status(
             httpx_mock=httpx_mock,
             requisition_id="requisition_id",
             institution_id="institution_id",
@@ -176,13 +186,13 @@ class TestGetBankConnection:
             agreement_id="agreement_id"            
         )
 
-        get_nordigen_agreement(
+        mock_get_nordigen_agreement(
             httpx_mock=httpx_mock,
             agreement_id="agreement_id"
         )
 
         for i in range(1,3):
-            get_account_details(
+            mock_get_account_details(
                 httpx_mock=httpx_mock,
                 account_id=f"account{i}_id"
             )

@@ -4,9 +4,9 @@ from pytest_httpx import HTTPXMock
 from app.tests.fixtures.nordigen import (
     nordigen_token,
     mock_nordigen_get_country_institutions,
-    nordigen_country_institutions_400,
-    nordigen_get_institution_by_id,
-    nordigen_get_institution_by_id_not_found
+    mock_get_nordigen_country_institutions_400,
+    mock_nordigen_get_institution_by_id,
+    mock_nordigen_get_institution_by_id_not_found
 )
 from app.tests.fixtures.app_fixtures import (
     test_client,
@@ -22,8 +22,7 @@ class TestGetCountryInstitutions:
         test_client,
         httpx_mock: HTTPXMock,
         authenticated_user,
-        nordigen_token,
-        nordigen_country_institutions,
+        nordigen_token
     ):
         # Prepare
         mock_nordigen_get_country_institutions(httpx_mock)
@@ -51,9 +50,15 @@ class TestGetCountryInstitutions:
         test_client,
         authenticated_user,
         nordigen_token,
-        nordigen_country_institutions_400
+        httpx_mock: HTTPXMock
     ):
-        response = test_client.get("/institutions?country_code=CY")
+        # Prepare
+        mock_get_nordigen_country_institutions_400(httpx_mock, "AMPESHIA")
+
+        # Act
+        response = test_client.get("/institutions?country_code=AMPESHIA")
+        
+        # Assert
         assert response.status_code == 400
         assert response.json() == {'detail': 'Invalid country code'}
 
@@ -71,9 +76,15 @@ class TestGetInstitutionById:
         test_client,
         authenticated_user,
         nordigen_token,
-        nordigen_get_institution_by_id,
+        httpx_mock: HTTPXMock,
     ):
+        # Prepare
+        mock_nordigen_get_institution_by_id(httpx_mock,"ASTROBANK_PIRBCY2N","AstroBank")
+
+        # Act
         response = test_client.get("/institutions/ASTROBANK_PIRBCY2N")
+        
+        # Assert
         assert response.status_code == 200
         assert response.json() == {
             "id": "ASTROBANK_PIRBCY2N",
@@ -88,9 +99,15 @@ class TestGetInstitutionById:
         test_client,
         authenticated_user,
         nordigen_token,
-        nordigen_get_institution_by_id_not_found
+        httpx_mock: HTTPXMock
     ):
-        response = test_client.get("/institutions/ASTROBANK_PIRBCY2N")
+        # Prepare
+        mock_nordigen_get_institution_by_id_not_found(httpx_mock,"ANAVARKOS_BANK")
+
+        # Act
+        response = test_client.get("/institutions/ANAVARKOS_BANK")
+
+        # Assert
         assert response.status_code == 404
         assert response.json() == {'detail': 'Insitution not found'}
 

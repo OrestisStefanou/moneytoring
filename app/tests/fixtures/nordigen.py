@@ -48,24 +48,22 @@ def mock_nordigen_get_country_institutions(httpx_mock: HTTPXMock):
     )
 
 
-@pytest.fixture(scope="function")
-def nordigen_country_institutions_400(httpx_mock: HTTPXMock):
+def mock_get_nordigen_country_institutions_400(httpx_mock: HTTPXMock, country_code: str):
     httpx_mock.add_response(
-        url="https://ob.nordigen.com/api/v2/institutions/?country=CY",
+        url=f"https://ob.nordigen.com/api/v2/institutions/?country={country_code}",
         method="GET",
         json={},
         status_code=400,
     )
 
 
-@pytest.fixture(scope="function")
-def nordigen_get_institution_by_id(httpx_mock: HTTPXMock):
+def mock_nordigen_get_institution_by_id(httpx_mock: HTTPXMock, institution_id: str, institution_name: str):
     httpx_mock.add_response(
-        url="https://ob.nordigen.com/api/v2/institutions/ASTROBANK_PIRBCY2N/",
+        url=f"https://ob.nordigen.com/api/v2/institutions/{institution_id}/",
         method="GET",
         json={
-            "id": "ASTROBANK_PIRBCY2N",
-            "name": "AstroBank",
+            "id": institution_id,
+            "name": institution_name,
             "bic": "PIRBCY2N",
             "transaction_total_days": "730",
             "countries": [
@@ -77,18 +75,16 @@ def nordigen_get_institution_by_id(httpx_mock: HTTPXMock):
     )
 
 
-@pytest.fixture(scope="function")
-def nordigen_get_institution_by_id_not_found(httpx_mock: HTTPXMock):
+def mock_nordigen_get_institution_by_id_not_found(httpx_mock: HTTPXMock, institution_id: str):
     httpx_mock.add_response(
-        url="https://ob.nordigen.com/api/v2/institutions/ASTROBANK_PIRBCY2N/",
+        url=f"https://ob.nordigen.com/api/v2/institutions/{institution_id}/",
         method="GET",
         json={},
         status_code=404,
     )
 
 
-@pytest.fixture(scope="function")
-def create_nordigen_requisition(httpx_mock: HTTPXMock):
+def mock_create_nordigen_requisition(httpx_mock: HTTPXMock, institution_id: str):
     httpx_mock.add_response(
         url="https://ob.nordigen.com/api/v2/requisitions/",
         method="POST",
@@ -97,7 +93,7 @@ def create_nordigen_requisition(httpx_mock: HTTPXMock):
             "created": "2022-07-26T09:44:24.664Z",
             "redirect": "www.some_website.com",
             "status": "CR",
-            "institution_id": "ASTROBANK_PIRBCY2N",
+            "institution_id": institution_id,
             "agreement": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
             "reference": None,
             "accounts": [],
@@ -111,7 +107,7 @@ def create_nordigen_requisition(httpx_mock: HTTPXMock):
     )
 
 
-def get_requisition_with_linked_status(
+def mock_get_requisition_with_linked_status(
     httpx_mock: HTTPXMock,
     requisition_id: str,
     institution_id: Optional[str] = "SANDBOXFINANCE_SFIN0000",
@@ -145,7 +141,7 @@ def get_requisition_with_linked_status(
     )
 
 
-def get_account_details(httpx_mock: HTTPXMock, account_id: str):
+def mock_get_account_details(httpx_mock: HTTPXMock, account_id: str):
     httpx_mock.add_response(
         url=f"https://ob.nordigen.com/api/v2/accounts/{account_id}/details/",
         method="GET",
@@ -164,7 +160,7 @@ def get_account_details(httpx_mock: HTTPXMock, account_id: str):
     )
 
 
-def get_nordigen_agreement(httpx_mock: HTTPXMock, agreement_id: str):
+def mock_get_nordigen_agreement(httpx_mock: HTTPXMock, agreement_id: str):
     httpx_mock.add_response(
         url=f"https://ob.nordigen.com/api/v2/agreements/enduser/{agreement_id}/",
         method="GET",

@@ -188,3 +188,12 @@ def mock_delete_nordigen_requisition(httpx_mock: HTTPXMock, requisition_id: str)
         json={},
         status_code=200
     )
+
+
+def mock_delete_nordigen_requisition_not_found(httpx_mock: HTTPXMock, requisition_id: str):
+    httpx_mock.add_response(
+        url=f"https://ob.nordigen.com/api/v2/requisitions/{requisition_id}/",
+        method="DELETE",
+        json={},
+        status_code=404
+    )

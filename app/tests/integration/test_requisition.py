@@ -9,7 +9,8 @@ from app.tests.fixtures.nordigen import (
     mock_get_requisition_with_linked_status,
     mock_get_account_details,
     mock_get_nordigen_agreement,
-    mock_delete_nordigen_requisition
+    mock_delete_nordigen_requisition,
+    mock_delete_nordigen_requisition_not_found
 )
 
 from app.tests.fixtures.app_fixtures import (
@@ -19,7 +20,6 @@ from app.tests.fixtures.app_fixtures import (
     authenticated_user,
     event_loop,
     assert_all_responses_were_requested,
-    create_test_user
 )
 from app.repos.requisition_repo import RequisitionRepo
 from app.repos.bank_account_repo import BankAccountRepo
@@ -39,7 +39,6 @@ class TestCreateBankConnection:
         httpx_mock: HTTPXMock
     ):
         # Prepare
-        await create_test_user(async_session)
         mock_create_nordigen_requisition(httpx_mock, "ASTROBANK_PIRBCY2N")
         mock_nordigen_get_institution_by_id(httpx_mock, "ASTROBANK_PIRBCY2N", "Astrobank")
 
@@ -112,8 +111,6 @@ class TestGetBankConnection:
         authenticated_user,
     ):
         # Prepare
-        await create_test_user(async_session)
-
         bank_account_repo = BankAccountRepo(async_session)
         for i in range(2):
             requisition = Requisition(
@@ -175,7 +172,6 @@ class TestGetBankConnection:
         httpx_mock: HTTPXMock
     ):
         # Prepare
-        await create_test_user(async_session)
         # Create internal requisition with not_linked status
         requisition_repo = RequisitionRepo(async_session)
         await requisition_repo.add(
@@ -243,7 +239,6 @@ class TestGetBankConnection:
         httpx_mock: HTTPXMock
     ):
         # Prepare
-        await create_test_user(async_session)
         # Create internal requisition
         requisition_repo = RequisitionRepo(async_session)
         await requisition_repo.add(
@@ -256,6 +251,38 @@ class TestGetBankConnection:
 
         # Mock nordigen responses
         mock_delete_nordigen_requisition(httpx_mock,"9b147a75-6a54-45b7-857d-ca4e2e88d234")
+
+        # act
+        response = test_client.delete("/bank_connections/9b147a75-6a54-45b7-857d-ca4e2e88d234")
+
+        # # Make sure that the internal requisition is deleted
+        internal_requisition = await requisition_repo.get("9b147a75-6a54-45b7-857d-ca4e2e88d234")
+        assert internal_requisition is None
+        
+        assert response.status_code == 200
+
+    @pytest.mark.asyncio
+    async def test_delete_nordigen_failure(
+        self,
+        test_client,
+        test_db,
+        async_session,
+        authenticated_user,
+        httpx_mock: HTTPXMock
+    ):
+        # Prepare
+        # Create internal requisition
+        requisition_repo = RequisitionRepo(async_session)
+        await requisition_repo.add(
+            _id="9b147a75-6a54-45b7-857d-ca4e2e88d234",
+            user_id="test_user_id",
+            institution_id="institution_id",
+            institution_name="ANAVARKOS BANK",
+            link="www.redirect_link.com"
+        )
+
+        # Mock nordigen responses
+        mock_delete_nordigen_requisition_not_found(httpx_mock,"9b147a75-6a54-45b7-857d-ca4e2e88d234")
 
         # act
         response = test_client.delete("/bank_connections/9b147a75-6a54-45b7-857d-ca4e2e88d234")

@@ -34,7 +34,6 @@ async def test_db():
             bind=engine, class_=AsyncSession, expire_on_commit=False
         )
         async with async_session() as session:
-            await session.exec("PRAGMA foreign_keys = ON")  # THIS SHOULD BE DELETED WHEN WE TRANSITION FROM SQLITE
             yield session
 
     app.dependency_overrides[dependencies.get_session] = get_test_session
@@ -59,7 +58,6 @@ async def async_session() -> AsyncSession:
 
     async with session() as s:
         async with engine.begin() as conn:
-            await s.exec("PRAGMA foreign_keys = ON")  # THIS SHOULD BE DELETED WHEN WE TRANSITION FROM SQLITE
             await conn.run_sync(SQLModel.metadata.create_all)
 
         yield s
@@ -84,13 +82,3 @@ def authenticated_user():
 def assert_all_responses_were_requested() -> bool:
     return False
 
-
-async def create_test_user(session):
-    app_user = AppUser(
-        user_id="test_user_id",
-        username="test_username",
-        email="test_email",
-        password="test_password"
-    )
-    session.add(app_user)
-    await session.commit()

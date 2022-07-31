@@ -121,7 +121,7 @@ class TestGetBankConnection:
                 link="www.redirect_link.com",
                 status=RequisitionStatus.linked,
                 accepted_at="2022-07-28",
-                expires_at="2022-10-28",
+                expires_at="2024-10-28",
                 max_historical_days=90
             )
             async_session.add(requisition)
@@ -144,7 +144,8 @@ class TestGetBankConnection:
             {
                 'accepted_at': '2022-07-28',
                 'bank_accounts':[{'account_id': 'account_id_0','currency': 'Euro','name': 'Main account'}],
-                'expires_at': '2022-10-28','id': 'requisition_id_0',
+                'expires_at': '2024-10-28',
+                'id': 'requisition_id_0',
                 'institution_name': 'institution_name_0',
                 'link': 'www.redirect_link.com',
                 'max_historical_days': 90,
@@ -153,7 +154,7 @@ class TestGetBankConnection:
             {
                 'accepted_at': '2022-07-28',
                 'bank_accounts': [{'account_id': 'account_id_1','currency': 'Euro','name': 'Main account'}],
-                'expires_at': '2022-10-28',
+                'expires_at': '2024-10-28',
                 'id': 'requisition_id_1',
                 'institution_name': 'institution_name_1',
                 'link': 'www.redirect_link.com',
@@ -227,6 +228,59 @@ class TestGetBankConnection:
                 'link': 'www.redirect_link.com',
                 'max_historical_days': 90,
                 'status': 'created'
+            },
+        ]
+
+    @pytest.mark.asyncio
+    async def test_get_expired_status(
+        self,
+        test_client,
+        test_db,
+        async_session,
+        authenticated_user,
+    ):
+        # Prepare
+        bank_account_repo = BankAccountRepo(async_session)
+        requisition = Requisition(
+            id="requisition_id",
+            user_id="test_user_id",
+            institution_id=f"institution_id",
+            institution_name=f"institution_name",
+            link="www.redirect_link.com",
+            status=RequisitionStatus.linked,
+            accepted_at="2022-03-28",
+            expires_at="2022-06-28",
+            max_historical_days=90
+        )
+        async_session.add(requisition)
+        await async_session.commit()
+        
+        for i in range(2):
+            await bank_account_repo.add(
+                account_id=f"account_id_{i}",
+                requistion_id=f"requisition_id",
+                name="Main account",
+                currency="Euro"
+            )
+
+        # Act
+        response = test_client.get("/bank_connections")
+
+        # Assert
+        assert response.status_code == 200
+        assert response.json() == [
+            {
+                'accepted_at': '2022-03-28',
+                'bank_accounts':[
+                    {'account_id': 'account_id_0','currency': 'Euro','name': 'Main account'},
+                    {'account_id': 'account_id_1','currency': 'Euro','name': 'Main account'}
+                ],
+                'expires_at': '2022-06-28',
+                'id': 'requisition_id',
+                'institution_name': 'institution_name',
+                'link': 'www.redirect_link.com',
+                'max_historical_days': 90,
+                'status': 'expired'
             },
         ]
 

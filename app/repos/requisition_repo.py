@@ -45,12 +45,15 @@ class RequisitionRepo(SQLRepo):
         accepted_at: str,
         expires_at: str,
         max_historical_days: str
-    ) -> Requisition:
+    ) -> Optional[Requisition]:
         """
         Updates requisition's status to linked and sets
         relevant information about the linking duration
         """
         requisition = await self.get(_id)
+        if requisition is None:
+            return None
+
         requisition.status = RequisitionStatus.linked
         requisition.accepted_at = accepted_at
         requisition.expires_at = expires_at
@@ -71,4 +74,16 @@ class RequisitionRepo(SQLRepo):
 
         await self._session.delete(requisition)
         await self._session.commit()
+        return requisition
+
+    async def set_expired_status(self, requisition_id: str) -> Optional[Requisition]:
+        requisition = await self.get(requisition_id)
+        if requisition_id is None:
+            return None
+        
+        requisition.status = RequisitionStatus.expired
+
+        self._session.add(requisition)
+        await self._session.commit()
+        await self._session.refresh(requisition)
         return requisition

@@ -6,6 +6,7 @@ from app.repos.nordigen_repo import NordigenRepo
 import app.models.http.nordigen as nordigen_models
 import app.models.database.requisition as db_requisition
 import app.utils.nordigen as nordigen_utils
+import app.utils.requisition as requisition_utils
 from app.services import bank_account as bank_account_service
 
 
@@ -47,6 +48,15 @@ async def get_requisitions_of_user(session: AsyncSession, user_id: str) -> List[
                         name=account_details.name,
                         currency=account_details.currency
                     )
+        elif internal_requisition.status == db_requisition.RequisitionStatus.linked:
+            # Check if connection is expired
+            requisition_expired = requisition_utils.check_expiration(internal_requisition.expires_at)
+            if requisition_expired:
+                internal_requisition = await mark_internal_requisition_as_expired(
+                    session=session,
+                    requisition_id=internal_requisition.id
+                )
+        
         user_requisitions.append(internal_requisition)
 
     return user_requisitions
@@ -91,6 +101,15 @@ async def mark_internal_requisition_as_linked(
         max_historical_days=agreement.max_historical_days
     )
     return requisition
+
+
+async def mark_internal_requisition_as_expired(
+    session: AsyncSession,
+    requisition_id: str    
+) -> db_requisition.Requisition:
+    requisition_repo = RequisitionRepo(session)
+    expired_requisition = await requisition_repo.set_expired_status(requisition_id)
+    return expired_requisition
 
 
 async def delete_requisition_from_nordigen(

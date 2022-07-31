@@ -1,4 +1,4 @@
-from typing import Optional,Dict,Any,List
+from typing import List
 
 from pydantic import BaseModel
 
@@ -42,3 +42,22 @@ class Requisition(BaseModel):
     agreement_id: str
     accounts: List[str]
     link: str
+
+
+class TransactionAmount(BaseModel):
+    amount: str
+    currency: str
+
+
+class Transaction(BaseModel):
+    bankTransactionCode: str
+    bookingDate: str
+    remittanceInformationUnstructured: str
+    transactionAmount: TransactionAmount
+    transactionId: str
+    valueDate: str
+
+
+class AccountTransactions(BaseModel):
+    booked: List[Transaction]
+    pending: List[Transaction]

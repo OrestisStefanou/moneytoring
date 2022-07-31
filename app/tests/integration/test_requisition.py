@@ -39,7 +39,7 @@ class TestCreateBankConnection:
         httpx_mock: HTTPXMock
     ):
         # Prepare
-        mock_create_nordigen_requisition(httpx_mock, "ASTROBANK_PIRBCY2N")
+        mock_create_nordigen_requisition(httpx_mock, "ASTROBANK_PIRBCY2N", "1b147a75-1a54-45b7-157d-ca1e2e18d231")
         mock_nordigen_get_institution_by_id(httpx_mock, "ASTROBANK_PIRBCY2N", "Astrobank")
 
         # Act
@@ -54,7 +54,7 @@ class TestCreateBankConnection:
             'accepted_at': None,
             'bank_accounts': None,
             'expires_at': None,
-            'id': '3fa85f64-5717-4562-b3fc-2c963f66afa6',
+            'id': "1b147a75-1a54-45b7-157d-ca1e2e18d231",
             'institution_name': 'Astrobank',
             'link': 'https://ob.nordigen.com/psd2/start/3fa85f64-5717-4562-b3fc-2c963f66afa6/anavarkos_bank',
             'max_historical_days': None,
@@ -63,7 +63,7 @@ class TestCreateBankConnection:
 
         # Assert that the internal requisition was created
         requisition_repo = RequisitionRepo(async_session)
-        requisition = await requisition_repo.get("3fa85f64-5717-4562-b3fc-2c963f66afa6")
+        requisition = await requisition_repo.get("1b147a75-1a54-45b7-157d-ca1e2e18d231")
         assert requisition is not None
         assert requisition.accepted_at is None
         assert requisition.status == "not_linked"
@@ -202,9 +202,10 @@ class TestGetBankConnection:
                 account_id=f"account{i}_id"
             )
 
-        # act
+        # Act
         response = test_client.get("/bank_connections")
 
+        # Assert
         # Make sure that the internal requisition is updated
         internal_requisition = await requisition_repo.get("requisition_id")
         assert internal_requisition.status == "linked"
@@ -229,6 +230,8 @@ class TestGetBankConnection:
             },
         ]
 
+
+class TestDeleteBankConnection:
     @pytest.mark.asyncio
     async def test_delete_success(
         self,
@@ -252,10 +255,11 @@ class TestGetBankConnection:
         # Mock nordigen responses
         mock_delete_nordigen_requisition(httpx_mock,"9b147a75-6a54-45b7-857d-ca4e2e88d234")
 
-        # act
+        # Act
         response = test_client.delete("/bank_connections/9b147a75-6a54-45b7-857d-ca4e2e88d234")
 
-        # # Make sure that the internal requisition is deleted
+        # Assert
+        # Make sure that the internal requisition is deleted
         internal_requisition = await requisition_repo.get("9b147a75-6a54-45b7-857d-ca4e2e88d234")
         assert internal_requisition is None
         
@@ -284,11 +288,108 @@ class TestGetBankConnection:
         # Mock nordigen responses
         mock_delete_nordigen_requisition_not_found(httpx_mock,"9b147a75-6a54-45b7-857d-ca4e2e88d234")
 
-        # act
+        # Act
         response = test_client.delete("/bank_connections/9b147a75-6a54-45b7-857d-ca4e2e88d234")
 
-        # # Make sure that the internal requisition is deleted
+        # Assert
+        # Make sure that the internal requisition is deleted
         internal_requisition = await requisition_repo.get("9b147a75-6a54-45b7-857d-ca4e2e88d234")
         assert internal_requisition is None
         
         assert response.status_code == 200
+
+    @pytest.mark.asyncio
+    async def test_delete_not_found(
+        self,
+        test_client,
+        test_db,
+        authenticated_user,
+        httpx_mock: HTTPXMock
+    ):
+        # Prepare
+        mock_delete_nordigen_requisition_not_found(httpx_mock,"9b147a75-6a54-45b7-857d-ca4e2e88d234")
+
+        # Act
+        response = test_client.delete("/bank_connections/9b147a75-6a54-45b7-857d-ca4e2e88d234")
+        
+        # Assert
+        assert response.status_code == 400
+        assert response.json()['detail'] == "Bank connection with given id doesn't exist"
+
+
+class TestUpdateBankConnection:
+    @pytest.mark.asyncio
+    async def test_update_success(
+        self,
+        test_client,
+        test_db,
+        async_session,
+        authenticated_user,
+        httpx_mock: HTTPXMock
+    ):
+        # Prepare
+        # Create internal expired requisition
+        requisition_repo = RequisitionRepo(async_session)
+        await requisition_repo.add(
+            _id="9b147a75-6a54-45b7-857d-ca4e2e88d234",
+            user_id="test_user_id",
+            institution_id="ASTROBANK_PIRBCY2N",
+            institution_name="Astrobank",
+            link="www.redirect_link.com",
+            status="expired"
+        )
+
+        # Mock nordigen responses
+        mock_delete_nordigen_requisition(httpx_mock,"9b147a75-6a54-45b7-857d-ca4e2e88d234")
+        mock_create_nordigen_requisition(httpx_mock, "ASTROBANK_PIRBCY2N", "1b147a75-1a54-45b7-157d-ca1e2e18d231")
+        mock_nordigen_get_institution_by_id(httpx_mock, "ASTROBANK_PIRBCY2N", "Astrobank")
+
+        # Act
+        response = test_client.put("/bank_connections/9b147a75-6a54-45b7-857d-ca4e2e88d234")
+
+        # Assert
+        # Make sure that the expired internal requisition is deleted
+        expired_requisition = await requisition_repo.get("9b147a75-6a54-45b7-857d-ca4e2e88d234")
+        assert expired_requisition is None
+        
+        # Assert that a new requisition was created
+        new_requisition = await requisition_repo.get("1b147a75-1a54-45b7-157d-ca1e2e18d231")
+        assert new_requisition is not None
+        assert new_requisition.accepted_at is None
+        assert new_requisition.status == "not_linked"
+        assert new_requisition.expires_at is None
+        assert new_requisition.max_historical_days is None
+        assert new_requisition.institution_name == "Astrobank"
+        assert new_requisition.user_id == "test_user_id"
+
+        assert response.status_code == 201
+        assert response.json() == {
+            'accepted_at': None,
+            'bank_accounts': None,
+            'expires_at': None,
+            'id': "1b147a75-1a54-45b7-157d-ca1e2e18d231",
+            'institution_name': 'Astrobank',
+            'link': 'https://ob.nordigen.com/psd2/start/3fa85f64-5717-4562-b3fc-2c963f66afa6/anavarkos_bank',
+            'max_historical_days': None,
+            'status': 'pending'
+        }
+
+    @pytest.mark.asyncio
+    async def test_update_not_found(
+        self,
+        test_client,
+        test_db,
+        authenticated_user,
+        httpx_mock: HTTPXMock
+    ):
+        # Prepare
+        mock_delete_nordigen_requisition_not_found(httpx_mock,"9b147a75-6a54-45b7-857d-ca4e2e88d234")
+
+        # Act
+        response = test_client.put("/bank_connections/9b147a75-6a54-45b7-857d-ca4e2e88d234")
+        
+        # Assert
+        assert response.status_code == 400
+        assert response.json() == {
+            'detail': "Bank connection with given id doesn't exist",
+        }

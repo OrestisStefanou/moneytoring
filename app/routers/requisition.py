@@ -113,7 +113,7 @@ async def delete_bank_connection(
 
 @router.put(
     "/bank_connections/{bank_connection_id}",
-    response_model=None,
+    response_model=requisition_entities.BankConnection,
     status_code=201
 )
 async def update_expired_bank_connection(
@@ -122,9 +122,9 @@ async def update_expired_bank_connection(
     user_id: str = Depends(extract_user_id_from_token)
 ):
     try:
-        await requisition_controller.update_expired_bank_connection(
+        bank_connection = await requisition_controller.update_expired_bank_connection(
             session=session,
-            bank_connection_id=bank_connection_id,
+            bank_connection_id=str(bank_connection_id),
             user_id=user_id
         )
     except requisition_errors.BankConnectionNotFound:
@@ -143,3 +143,5 @@ async def update_expired_bank_connection(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Something went wrong, we are working on it",
         )
+    
+    return bank_connection

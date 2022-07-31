@@ -84,12 +84,16 @@ def mock_nordigen_get_institution_by_id_not_found(httpx_mock: HTTPXMock, institu
     )
 
 
-def mock_create_nordigen_requisition(httpx_mock: HTTPXMock, institution_id: str):
+def mock_create_nordigen_requisition(
+    httpx_mock: HTTPXMock,
+    institution_id: str,
+    requisition_id: str
+):
     httpx_mock.add_response(
         url="https://ob.nordigen.com/api/v2/requisitions/",
         method="POST",
         json={
-            "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+            "id": requisition_id,
             "created": "2022-07-26T09:44:24.664Z",
             "redirect": "www.some_website.com",
             "status": "CR",

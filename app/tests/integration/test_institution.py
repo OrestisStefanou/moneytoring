@@ -26,7 +26,11 @@ class TestGetCountryInstitutions:
     ):
         # Prepare
         mock_nordigen_get_country_institutions(httpx_mock)
+
+        # Act
         response = test_client.get("/institutions?country_code=CY")
+
+        # Assert
         assert response.status_code == 200
         assert response.json() == [
             {

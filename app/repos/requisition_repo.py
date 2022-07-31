@@ -18,14 +18,16 @@ class RequisitionRepo(SQLRepo):
         user_id: str,
         institution_id: str,
         institution_name: str,
-        link: str
+        link: str,
+        status: Optional[RequisitionStatus] = RequisitionStatus.not_linked
     ) -> Requisition:
         requisition = Requisition(
             id=_id,
             user_id=user_id,
             institution_id=institution_id,
             institution_name=institution_name,
-            link=link
+            link=link,
+            status=status
         )
 
         self._session.add(requisition)

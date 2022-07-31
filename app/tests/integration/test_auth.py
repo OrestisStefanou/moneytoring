@@ -9,11 +9,14 @@ class TestSignUp:
         test_client,
         test_db,
         async_session
-    ):
+    ):  
+        # Act
         response = test_client.post(
             "/signup",
             json={"username": "orestis", "email": "orestis@email.com", "password": "12345"},
-        )   
+        )
+
+        # Assert
         assert response.status_code == 201
         user_repo = AppUserRepo(async_session)
         user = await user_repo.get_by_email("orestis@email.com")
@@ -27,10 +30,13 @@ class TestSignUp:
         test_db,
         async_session
     ):
+        # Act
         response = test_client.post(
             "/signup",
             json={"username": "orestis", "email": "orestis@email.com", "password": "12345"},
-        )   
+        )
+        
+        # Assert
         assert response.status_code == 201
 
         response = test_client.post(
@@ -51,10 +57,13 @@ class TestSignUp:
         test_db,
         async_session
     ):
+        # Act
         response = test_client.post(
             "/signup",
             json={"username": "orestis", "email": "orestis.com", "password": "12345"},
-        )   
+        )
+
+        # Assert
         assert response.status_code == 400
         assert response.json()['detail'] == "Invalid email"
         
@@ -68,10 +77,13 @@ class TestToken:
         test_client,
         test_db
     ):
+        # Act
         response = test_client.post(
             "/signup",
             json={"username": "orestis", "email": "orestis@email.com", "password": "12345"},
-        )   
+        )
+
+        # Assert
         assert response.status_code == 201
 
         response = test_client.post(
@@ -86,10 +98,12 @@ class TestToken:
         test_client,
         test_db
     ):
+        # Act
         response = test_client.post(
             "/token",
             data={"username": "orestis@email.com", "password": "12345"},
-        )   
+        )
 
+        # Assert
         assert response.status_code == 401
         assert response.json()['detail'] == 'Wrong email or password'

@@ -1,5 +1,4 @@
 import asyncio
-from app.models.database.app_user import AppUser
 import pytest
 import pytest_asyncio
 from typing import Generator
@@ -62,11 +61,6 @@ async def async_session() -> AsyncSession:
 
         yield s
 
-    async with engine.begin() as conn:
-        await conn.run_sync(SQLModel.metadata.drop_all)
-
-    await engine.dispose()
-
 
 @pytest.fixture(scope="function")
 def authenticated_user():
@@ -78,6 +72,9 @@ def authenticated_user():
     app.dependency_overrides = {}
 
 
+"""
+The fixure below is need by pytest_httpx
+"""
 @pytest.fixture(scope="function")
 def assert_all_responses_were_requested() -> bool:
     return False

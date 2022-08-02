@@ -9,7 +9,9 @@ from app.models.http.nordigen import (
     Institution,
     Requisition,
     Agreement,
-    AccountDetails
+    AccountDetails,
+    Transaction,
+    TransactionAmount
 )
 from app.errors.nordigen import NordigenFailure, RequisitionNotFound
 from app.errors.http import HttpRequestError
@@ -228,3 +230,59 @@ class NordigenClient(HttpClient):
 
         if response.status_code == 404:
             raise RequisitionNotFound()
+
+
+    async def get_account_transactions(
+        self,
+        account_id: str,
+        date_from: Optional[str] = None,
+        date_to: Optional[str] = None
+    ) -> Optional[List[Transaction]]:
+        """
+        Params:
+            - date_from: Date in format YYYY-MM-DD
+            - date_to: Date in format YYYY-MM-DD
+            In case they are not given date_to will be the current date
+            and date_from will be the current day minus the max historical days
+            that we are allowed for this account
+        Returns:
+            - A list with the transactions of the account or none in case the 
+            given account_id is not valid
+        """
+        await self._check_token_expiration()
+
+        try:
+            response = await self.get(
+                endpoint=f'/accounts/{account_id}/transactions/',
+                params={
+                    'date_to': date_to,
+                    'date_from': date_from
+                },
+                headers=self._headers,
+            )
+        except HttpRequestError as err:
+            logging.error("Http call to get account transactions failed with:", str(err))
+            raise NordigenFailure("Call to get account transactions failed")
+
+        if response.status_code == 404:
+            return None
+
+        transactions = response.json()['transactions']
+
+        booked_transactions = transactions['booked']
+
+        return [
+            Transaction(
+                bank_transaction_code=transaction.get('bankTransactionCode'),
+                booking_date=transaction.get('bookingDate'),
+                remittance_information_unstructured=transaction.get('remittanceInformationUnstructured'),
+                transaction_amount=TransactionAmount(
+                    amount=transaction.get('transactionAmount').get('amount'),
+                    currency=transaction.get('transactionAmount').get('currency')
+                ),
+                transaction_id=transaction.get('transactionId'),
+                value_date=transaction.get('valueDate'),
+                debtor_name=transaction.get('debtorName')
+            )
+            for transaction in booked_transactions
+        ]

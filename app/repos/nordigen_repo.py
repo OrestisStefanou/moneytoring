@@ -5,7 +5,8 @@ from app.models.http.nordigen import (
     AccountDetails,
     Agreement,
     Institution,
-    Requisition
+    Requisition,
+    Transaction
 )
 
 
@@ -39,3 +40,16 @@ class NordigenRepo(HTTPRepo):
     
     async def delete_requisition_by_id(self, _id: str) -> None:
         await self._client.delete_requisition_by_id(_id)
+    
+    async def get_account_transactions(
+        self,
+        account_id: str,
+        date_from: Optional[str] = None,
+        date_to: Optional[str] = None    
+    ) -> Optional[List[Transaction]]:
+        transactions = await self._client.get_account_transactions(
+            account_id=account_id,
+            date_from=date_from,
+            date_to=date_to
+        )
+        return transactions

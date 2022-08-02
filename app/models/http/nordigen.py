@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 
 from pydantic import BaseModel
 
@@ -50,12 +50,13 @@ class TransactionAmount(BaseModel):
 
 
 class Transaction(BaseModel):
-    bankTransactionCode: str
-    bookingDate: str
-    remittanceInformationUnstructured: str
-    transactionAmount: TransactionAmount
-    transactionId: str
-    valueDate: str
+    bank_transaction_code: Optional[str]
+    booking_date: Optional[str]
+    remittance_information_unstructured: str
+    transaction_amount: TransactionAmount
+    transaction_id: Optional[str]
+    value_date: str
+    debtor_name: Optional[str]
 
 
 class AccountTransactions(BaseModel):

@@ -1,6 +1,5 @@
 from typing import Iterable, Optional
 
-from requests import session
 from sqlmodel.ext.asyncio.session import AsyncSession
 from sqlmodel import select
 

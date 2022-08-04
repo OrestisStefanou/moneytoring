@@ -31,9 +31,9 @@ class AccountTransaction(SQLModel, table=True):
     debtor_name: Optional[str] = None
     code: str
     created_date: str   # Date in format YYYY-MM-DD
-    booking_date: Optional[str] = None   # Date in format YYYY-MM-DD
-    booking_day: Optional[int] = None
-    booking_month: Optional[int] = None
-    booking_year: Optional[int] = None
+    booking_date: str   # Date in format YYYY-MM-DD
+    booking_day: int
+    booking_month: int
+    booking_year: int
     category: Optional[TransactionCategory] = None  # This will be set by the user
     custom_category: Optional[str] = None   # This will be set by the user 

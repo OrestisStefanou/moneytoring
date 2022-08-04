@@ -50,8 +50,7 @@ async def get_requisitions_of_user(session: AsyncSession, user_id: str) -> List[
                     )
         elif internal_requisition.status == db_requisition.RequisitionStatus.linked:
             # Check if connection is expired
-            requisition_expired = requisition_utils.check_expiration(internal_requisition.expires_at)
-            if requisition_expired:
+            if internal_requisition.is_expired:
                 internal_requisition = await mark_internal_requisition_as_expired(
                     session=session,
                     requisition_id=internal_requisition.id

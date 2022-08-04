@@ -1,3 +1,4 @@
+from datetime import datetime
 from enum import Enum
 from typing import Optional
 
@@ -20,3 +21,12 @@ class Requisition(SQLModel, table=True):
     accepted_at: Optional[str] = None     # Datetime in format YYYY-MM-DDTHH:MM:SS
     expires_at: Optional[str] = None     # Date in format YYYY-MM-DD
     max_historical_days: Optional[int] = None
+
+    @property
+    def is_expired(self) -> bool:
+        expiration_dt = datetime.strptime(self.expires_at, "%Y-%m-%d")
+
+        if expiration_dt > datetime.now():
+            return False
+        
+        return True

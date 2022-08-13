@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import Optional
 
 from sqlmodel.ext.asyncio.session import AsyncSession
 
@@ -10,9 +11,11 @@ async def create_account_history(session: AsyncSession, account_id: str) ->  Acc
     account_history_repo = AccountHistoryRepo(session)
     # When we create a new account history the latest date is the current one
     latest_date =  datetime.now().strftime("%Y-%m-%d")
+    account_history = await account_history_repo.add(account_id, latest_date)
+    return account_history
 
 
-async def get_account_history(session: AsyncSession, account_id: str) -> AccountHistory:
+async def get_account_history(session: AsyncSession, account_id: str) -> Optional[AccountHistory]:
     pass
 
 

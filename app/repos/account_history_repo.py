@@ -1,3 +1,6 @@
+from typing import Optional
+import uuid
+from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.repos.sql_repo import SQLRepo
@@ -10,16 +13,29 @@ class AccountHistoryRepo(SQLRepo):
 
     async def add(
         self,
-        _id: str,
         account_id: str,
         latest_date: str
     ) -> AccountHistory:
         account_history = AccountHistory(
-            id=_id,
+            id=str(uuid.uuid4()),
             account_id=account_id,
             latest_date=latest_date
         )
 
         self._session.add(account_history)
         await self._session.commit()
+        return account_history
+
+    async def get_by_account_id(self, account_id: str) -> Optional[AccountHistory]:
+        statement = select(AccountHistory).where(AccountHistory.account_id == account_id)
+        result = await self._session.exec(statement)
+        return result.first()
+
+    async def update_latest_date_for_account_id(self, account_id: str, latest_date: str) -> AccountHistory:
+        account_history = self.get_by_account_id(account_id)
+        account_history.latest_date = latest_date
+
+        self._session.add(account_history)
+        await self._session.commit()
+        await self._session.refresh(account_history)
         return account_history

@@ -49,3 +49,12 @@ CREATE TABLE AccountTransaction (
     REFERENCES BankAccount (account_id) 
        ON DELETE CASCADE
 );
+
+CREATE TABLE AccountHistory (
+	id TEXT PRIMARY KEY,
+	account_id TEXT NOT NULL,
+	latest_date TEXT NOT NULL,
+    FOREIGN KEY (account_id)
+    REFERENCES BankAccount (account_id) 
+       ON DELETE CASCADE
+);

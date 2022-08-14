@@ -21,8 +21,9 @@ async def get_account_history(session: AsyncSession, account_id: str) -> Optiona
     return account_history
 
 
-async def update_account_history(session: AsyncSession, account_id: str, latest_date: str) -> AccountHistory:
+async def update_account_history(session: AsyncSession, account_id: str) -> AccountHistory:
     account_history_repo = AccountHistoryRepo(session)
+    latest_date =  datetime.now().strftime("%Y-%m-%d")
     updated_account_history = await account_history_repo.update_latest_date_for_account_id(
         account_id=account_id,
         latest_date=latest_date

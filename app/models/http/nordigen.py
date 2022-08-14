@@ -50,10 +50,10 @@ class TransactionAmount(BaseModel):
 
 
 class Transaction(BaseModel):
-    bank_transaction_code: Optional[str]
-    booking_date: Optional[str]
+    bank_transaction_code: str
+    booking_date: str
     remittance_information_unstructured: str
     transaction_amount: TransactionAmount
-    transaction_id: Optional[str]
+    transaction_id: str
     value_date: str
-    debtor_name: Optional[str]
+    debtor_name: Optional[str] = None

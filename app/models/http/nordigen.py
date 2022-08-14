@@ -57,8 +57,3 @@ class Transaction(BaseModel):
     transaction_id: Optional[str]
     value_date: str
     debtor_name: Optional[str]
-
-
-class AccountTransactions(BaseModel):
-    booked: List[Transaction]
-    pending: List[Transaction]

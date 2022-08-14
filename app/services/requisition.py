@@ -1,4 +1,5 @@
 from typing import List, Optional
+
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.repos.requisition_repo import RequisitionRepo
@@ -6,7 +7,6 @@ from app.repos.nordigen_repo import NordigenRepo
 import app.models.http.nordigen as nordigen_models
 import app.models.database.requisition as db_requisition
 import app.utils.nordigen as nordigen_utils
-import app.utils.requisition as requisition_utils
 from app.services import bank_account as bank_account_service
 
 

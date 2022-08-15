@@ -201,3 +201,79 @@ def mock_delete_nordigen_requisition_not_found(httpx_mock: HTTPXMock, requisitio
         json={},
         status_code=404
     )
+
+
+def mock_get_account_transactions(httpx_mock: HTTPXMock, account_id: str):
+    httpx_mock.add_response(
+        url=f"https://ob.nordigen.com/api/v2/accounts/{account_id}/transactions/",
+        method="GET",
+        json={
+        "transactions": {
+            "booked": [
+                {
+                    "transactionId": "2022081401927901-1",
+                    "bookingDate": "2022-08-14",
+                    "valueDate": "2022-08-14",
+                    "transactionAmount": {
+                        "amount": "45.00",
+                        "currency": "EUR"
+                    },
+                    "debtorName": "MON MOTHMA",
+                    "debtorAccount": {
+                        "iban": "GL3343697694912188"
+                    },
+                    "remittanceInformationUnstructured": "For the support of Restoration of the Republic foundation",
+                    "bankTransactionCode": "PMNT"
+                },
+                {
+                    "transactionId": "2022081401927905-1",
+                    "bookingDate": "2022-08-14",
+                    "valueDate": "2022-08-14",
+                    "transactionAmount": {
+                        "amount": "-15.00",
+                        "currency": "EUR"
+                    },
+                    "remittanceInformationUnstructured": "PAYMENT Alderaan Coffe",
+                    "bankTransactionCode": "PMNT"
+                },
+                {
+                    "transactionId": "2022081401927907-1",
+                    "bookingDate": "2022-08-14",
+                    "valueDate": "2022-08-14",
+                    "transactionAmount": {
+                        "amount": "45.00",
+                        "currency": "EUR"
+                    },
+                    "debtorName": "MON MOTHMA",
+                    "debtorAccount": {
+                        "iban": "GL3343697694912188"
+                    },
+                    "remittanceInformationUnstructured": "For the support of Restoration of the Republic foundation",
+                    "bankTransactionCode": "PMNT"
+                },
+                {
+                    "transactionId": "2022081401927902-1",
+                    "bookingDate": "2022-08-14",
+                    "valueDate": "2022-08-14",
+                    "transactionAmount": {
+                        "amount": "-15.00",
+                        "currency": "EUR"
+                    },
+                    "remittanceInformationUnstructured": "PAYMENT Alderaan Coffe",
+                    "bankTransactionCode": "PMNT"
+                },
+            ],
+            "pending": [
+                {
+                    "valueDate": "2022-08-13",
+                    "transactionAmount": {
+                    "amount": "10.00",
+                    "currency": "EUR"
+                    },
+                    "remittanceInformationUnstructured": "Reserved PAYMENT Emperor's Burgers"
+                }
+            ]
+        }
+        },
+        status_code=200
+    )

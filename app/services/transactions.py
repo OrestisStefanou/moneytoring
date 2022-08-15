@@ -26,6 +26,7 @@ async def fetch_and_save_account_transactions_from_nordigen(
     for transaction in transactions:
         await create_internal_transaction(
             session=session,
+            transaction_id=transaction.transaction_id,
             account_id=account_id,
             amount=transaction.transaction_amount.amount,
             currency=transaction.transaction_amount.currency,
@@ -55,6 +56,7 @@ async def get_internal_transactions(
 
 async def create_internal_transaction(
     session: AsyncSession,
+    transaction_id: str,
     account_id: str,
     amount: str,
     currency: str,
@@ -66,6 +68,7 @@ async def create_internal_transaction(
 ) -> db_transaction.AccountTransaction:
     transaction_repo = TransactionRepo(session)
     transaction = await transaction_repo.add(
+        _id=transaction_id,
         account_id=account_id,
         amount=amount,
         currency=currency,

@@ -23,7 +23,6 @@ from app.tests.fixtures.app_fixtures import (
 )
 from app.repos.requisition_repo import RequisitionRepo
 from app.repos.bank_account_repo import BankAccountRepo
-from app.repos.app_user_repo import AppUserRepo
 from app.models.database.requisition import Requisition, RequisitionStatus
 
 

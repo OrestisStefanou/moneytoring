@@ -62,6 +62,5 @@ class TransactionRepo(SQLRepo):
             AccountTransaction.booking_month <= to_date.month,
             AccountTransaction.booking_year <= to_date.year
         )
-
         account_transactions = await self._session.exec(statement)
         return account_transactions

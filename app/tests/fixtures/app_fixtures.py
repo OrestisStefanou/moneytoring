@@ -14,7 +14,7 @@ from app import dependencies
 from app.main import app
 
 
-engine = create_async_engine(settings.test_database_dsn, connect_args={"check_same_thread": False})
+engine = create_async_engine(settings.test_database_dsn, connect_args={"check_same_thread": False},echo=True)
 
 @pytest.fixture(scope="session")
 def event_loop(request) -> Generator:  # noqa: indirect usage

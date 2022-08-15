@@ -23,7 +23,7 @@ async def get_account_transactions(
     from_date: Optional[str] = None,
     to_date: Optional[str] = None,
     session: AsyncSession = Depends(get_session),
-    user_id: str = Depends(extract_user_id_from_token)
+    _: str = Depends(extract_user_id_from_token)
 ):
     try:
         transactions = await transaction_controller.get_account_transactions(

@@ -41,14 +41,13 @@ async def get_account_transactions(
         # This is the first time we try to get transactions for this account
         # so we have to create an account history, fetch the transactions from nordigen
         # and save them internally
-        print("FETCHING AND SAVIND TRANSACTIONS FROM NORDIGEN")
         nordigen_transactions = await transaction_service.fetch_and_save_account_transactions_from_nordigen(
             session=session,
             account_id=account_id
         )
         if nordigen_transactions is None:
             raise transaction_errors.AccountNotFound
-        print("CREATING ACCOUNT HISTORY")
+        
         await account_history_service.create_account_history(
             session=session,
             account_id=account_id

@@ -40,3 +40,17 @@ class TestGetAccountTransactions:
         )
 
         assert response.status_code == 200
+
+        # Check response body
+        print("RESPONSE IS!!!")
+        print(response.json())
+        # Check that we have transactions internally
+        transaction_repo = TransactionRepo(async_session)
+        transactions = await transaction_repo.get_all()
+        print("INTERNAL TRANSACTIONS:")
+        print(transactions)
+        # Check that we have account history
+        account_history_repo = AccountHistoryRepo(async_session)
+        account_histories = await account_history_repo.get_all()
+        print("ACCOUNT HISTORIES")
+        print(account_histories)

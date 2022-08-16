@@ -10,6 +10,7 @@ from app.dependencies import extract_user_id_from_token, get_session
 from app.controllers import transaction as transaction_controller
 from app.errors.transaction import AccountNotFound
 import app.entities.transaction as transaction_entities
+import app.utils.transaction as transaction_utils
 
 router = APIRouter(tags=["Account Transactions"])
 
@@ -25,7 +26,21 @@ async def get_account_transactions(
     session: AsyncSession = Depends(get_session),
     _: str = Depends(extract_user_id_from_token)
 ):
-    # Add validation checks for the dates format(Should we create a custom type for this?)
+    # Validation checks for the dates format
+    if from_date:
+        if transaction_utils.validate_date_format(from_date) is False:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Date must be in format YYYY-MM-DD",
+            )
+
+    if to_date:
+        if transaction_utils.validate_date_format(to_date) is False:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Date must be in format YYYY-MM-DD",
+            )
+
     try:
         transactions = await transaction_controller.get_account_transactions(
             session=session,

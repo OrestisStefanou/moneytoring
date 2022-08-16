@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.repos.bank_account_repo import BankAccountRepo
@@ -34,3 +34,9 @@ async def get_requistion_bank_accounts(session: AsyncSession, requisition_id: st
     bank_account_repo = BankAccountRepo(session)
     bank_accounts = await bank_account_repo.get_accounts_by_requisition_id(requisition_id)
     return list(bank_accounts)
+
+
+async def get_bank_account_by_id(session: AsyncSession, account_id: str) -> Optional[db_bank_account.BankAccount]:
+    bank_account_repo = BankAccountRepo(session)
+    bank_account = await bank_account_repo.get(account_id)
+    return bank_account

@@ -5,6 +5,7 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 
 import app.services.account_history as account_history_service
 import app.services.transactions as transaction_service
+import app.services.bank_account as bank_account_service
 import app.errors.transaction as transaction_errors
 import app.models.database.transaction as transaction_models
 
@@ -24,7 +25,10 @@ async def get_account_transactions(
         3. Update AccountHistory model
         4. Return the transactions
     """
-    # Check if account with given id exists
+    # TODO: Check if account with given id exists
+    bank_account = await bank_account_service.get_bank_account_by_id(session, account_id)
+    if bank_account is None:
+        raise transaction_errors.AccountNotFound()
     if from_date is None:
         # If from date is not given we set to 90 days prior from
         # current date as this is max historical days we have access to
@@ -43,12 +47,10 @@ async def get_account_transactions(
         # This is the first time we try to get transactions for this account
         # so we have to create an account history, fetch the transactions from nordigen
         # and save them internally
-        nordigen_transactions = await transaction_service.fetch_and_save_account_transactions_from_nordigen(
+        await transaction_service.fetch_and_save_account_transactions_from_nordigen(
             session=session,
             account_id=account_id
         )
-        if nordigen_transactions is None:
-            raise transaction_errors.AccountNotFound
         
         await account_history_service.create_account_history(
             session=session,
@@ -75,8 +77,5 @@ async def get_account_transactions(
         from_date=from_date,
         to_date=to_date
     )
-
-    if transactions is None:
-        raise transaction_errors.AccountNotFound()
 
     return transactions

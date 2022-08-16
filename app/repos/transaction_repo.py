@@ -33,6 +33,7 @@ class TransactionRepo(SQLRepo):
             code=code,
             created_date=created_date,
             booking_date=booking_date,
+            booking_date_ts=booking_date_obj.timestamp(),
             booking_day=booking_date_obj.day,
             booking_month=booking_date_obj.month,
             booking_year=booking_date_obj.year,
@@ -55,12 +56,8 @@ class TransactionRepo(SQLRepo):
 
         statement = select(AccountTransaction).where(
             AccountTransaction.account_id == account_id,
-            AccountTransaction.booking_day >= from_date.day,
-            AccountTransaction.booking_month >= from_date.month,
-            AccountTransaction.booking_year >= from_date.year,
-            AccountTransaction.booking_day <= to_date.day,
-            AccountTransaction.booking_month <= to_date.month,
-            AccountTransaction.booking_year <= to_date.year
+            AccountTransaction.booking_date_ts >= from_date.timestamp(),
+            AccountTransaction.booking_date_ts <= to_date.timestamp()
         )
         account_transactions = await self._session.exec(statement)
         return account_transactions

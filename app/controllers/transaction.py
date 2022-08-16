@@ -8,6 +8,7 @@ import app.services.transactions as transaction_service
 import app.errors.transaction as transaction_errors
 import app.models.database.transaction as transaction_models
 
+
 async def get_account_transactions(
     session: AsyncSession,
     account_id: str,
@@ -23,6 +24,7 @@ async def get_account_transactions(
         3. Update AccountHistory model
         4. Return the transactions
     """
+    # Check if account with given id exists
     if from_date is None:
         # If from date is not given we set to 90 days prior from
         # current date as this is max historical days we have access to

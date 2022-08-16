@@ -40,6 +40,7 @@ CREATE TABLE AccountTransaction (
 	code TEXT NOT NULL,
 	created_date TEXT NOT NULL,
 	booking_date TEXT,
+	booking_date_ts INT NOT NULL,
 	booking_day INT,
 	booking_month INT,
 	booking_year INT,

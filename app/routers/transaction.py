@@ -25,6 +25,7 @@ async def get_account_transactions(
     session: AsyncSession = Depends(get_session),
     _: str = Depends(extract_user_id_from_token)
 ):
+    # Add validation checks for the dates format(Should we create a custom type for this?)
     try:
         transactions = await transaction_controller.get_account_transactions(
             session=session,

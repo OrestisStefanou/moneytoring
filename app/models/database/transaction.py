@@ -35,5 +35,6 @@ class AccountTransaction(SQLModel, table=True):
     booking_day: int
     booking_month: int
     booking_year: int
+    booking_date_ts: int
     category: Optional[TransactionCategory] = None  # This will be set by the user
     custom_category: Optional[str] = None   # This will be set by the user 

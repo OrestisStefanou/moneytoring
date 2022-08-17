@@ -32,7 +32,7 @@ class AccountHistoryRepo(SQLRepo):
         return result.first()
 
     async def update_latest_date_for_account_id(self, account_id: str, latest_date: str) -> AccountHistory:
-        account_history = self.get_by_account_id(account_id)
+        account_history = await self.get_by_account_id(account_id)
         account_history.latest_date = latest_date
 
         self._session.add(account_history)

@@ -16,21 +16,12 @@ async def get_account_transactions(
     from_date: Optional[str] = None,
     to_date: Optional[str] = None
 ) -> Iterable[transaction_models.AccountTransaction]:
-    """
-    1. Check if we internally have account transactions for these dates
-    2. If we have fetch and return them
-    3. If we don't
-        1. Fetch the transactions from nordigen
-        2. Save the transactions internally
-        3. Update AccountHistory model
-        4. Return the transactions
-    """
-    # TODO: Check if account with given id exists
     bank_account = await bank_account_service.get_bank_account_by_id(session, account_id)
     if bank_account is None:
         raise transaction_errors.AccountNotFound()
+    
     if from_date is None:
-        # If from date is not given we set to 90 days prior from
+        # If from date is not given we set it to 90 days prior from
         # current date as this is max historical days we have access to
         from_date = (datetime.now() - timedelta(days=90)).strftime("%Y-%m-%d")
     

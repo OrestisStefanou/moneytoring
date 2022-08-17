@@ -1,3 +1,4 @@
+from datetime import datetime, timedelta
 from typing import List, Optional
 import pytest
 
@@ -255,6 +256,60 @@ def mock_get_account_transactions(httpx_mock: HTTPXMock, account_id: str):
                     "transactionId": "2022081401927902-1",
                     "bookingDate": "2022-08-14",
                     "valueDate": "2022-08-14",
+                    "transactionAmount": {
+                        "amount": "-15.00",
+                        "currency": "EUR"
+                    },
+                    "remittanceInformationUnstructured": "PAYMENT Alderaan Coffe",
+                    "bankTransactionCode": "PMNT"
+                },
+            ],
+            "pending": [
+                {
+                    "valueDate": "2022-08-13",
+                    "transactionAmount": {
+                    "amount": "10.00",
+                    "currency": "EUR"
+                    },
+                    "remittanceInformationUnstructured": "Reserved PAYMENT Emperor's Burgers"
+                }
+            ]
+        }
+        },
+        status_code=200
+    )
+
+
+def mock_get_account_transactions_wtih_dates(
+    httpx_mock: HTTPXMock,
+    account_id: str,
+    date_from: str,
+):
+    httpx_mock.add_response(
+        url=f"https://ob.nordigen.com/api/v2/accounts/{account_id}/transactions/?date_from={date_from}",
+        method="GET",
+        json={
+        "transactions": {
+            "booked": [
+                {
+                    "transactionId": "2022081401927901-1",
+                    "bookingDate": date_from,
+                    "valueDate": date_from,
+                    "transactionAmount": {
+                        "amount": "45.00",
+                        "currency": "EUR"
+                    },
+                    "debtorName": "MON MOTHMA",
+                    "debtorAccount": {
+                        "iban": "GL3343697694912188"
+                    },
+                    "remittanceInformationUnstructured": "For the support of Restoration of the Republic foundation",
+                    "bankTransactionCode": "PMNT"
+                },
+                {
+                    "transactionId": "2022081401927905-1",
+                    "bookingDate": date_from,
+                    "valueDate": date_from,
                     "transactionAmount": {
                         "amount": "-15.00",
                         "currency": "EUR"

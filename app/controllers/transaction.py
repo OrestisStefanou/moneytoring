@@ -28,39 +28,11 @@ async def get_account_transactions(
     if to_date is None:
         to_date = datetime.now().strftime("%Y-%m-%d")
 
-    # Check account history
-    account_history = await account_history_service.get_account_history(
+    await account_history_service.check_account_history(
         session=session,
-        account_id=account_id
+        account_id=account_id,
+        to_date=to_date
     )
-
-    if account_history is None:
-        # This is the first time we try to get transactions for this account
-        # so we have to create an account history, fetch the transactions from nordigen
-        # and save them internally
-        await transaction_service.fetch_and_save_account_transactions_from_nordigen(
-            session=session,
-            account_id=account_id
-        )
-        
-        await account_history_service.create_account_history(
-            session=session,
-            account_id=account_id
-        )
-    else:
-        # This not the first time we try to get transactions for this account
-        # so we have to check if the internal transactions we have cover the 
-        # requested dates
-        if account_history.covers_date(to_date) is False:
-            await transaction_service.fetch_and_save_account_transactions_from_nordigen(
-                session=session,
-                account_id=account_id,
-                from_date=account_history.latest_date
-            )
-            await account_history_service.update_account_history(
-                session=session,
-                account_id=account_id
-            )
 
     transactions = await transaction_service.get_internal_transactions(
         session=session,

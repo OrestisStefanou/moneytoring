@@ -228,7 +228,7 @@ def mock_get_account_transactions(httpx_mock: HTTPXMock, account_id: str):
                 },
                 {
                     "transactionId": "2022081401927905-1",
-                    "bookingDate": "2022-08-14",
+                    "bookingDate": "2022-08-15",
                     "valueDate": "2022-08-14",
                     "transactionAmount": {
                         "amount": "-15.00",
@@ -239,7 +239,7 @@ def mock_get_account_transactions(httpx_mock: HTTPXMock, account_id: str):
                 },
                 {
                     "transactionId": "2022081401927907-1",
-                    "bookingDate": "2022-08-14",
+                    "bookingDate": "2022-08-13",
                     "valueDate": "2022-08-14",
                     "transactionAmount": {
                         "amount": "45.00",
@@ -254,7 +254,7 @@ def mock_get_account_transactions(httpx_mock: HTTPXMock, account_id: str):
                 },
                 {
                     "transactionId": "2022081401927902-1",
-                    "bookingDate": "2022-08-14",
+                    "bookingDate": "2022-08-12",
                     "valueDate": "2022-08-14",
                     "transactionAmount": {
                         "amount": "-15.00",

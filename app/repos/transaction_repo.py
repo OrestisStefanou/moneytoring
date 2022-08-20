@@ -3,6 +3,7 @@ from typing import Iterable, Optional
 
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
+import sqlalchemy
 
 from app.repos.sql_repo import SQLRepo
 from app.models.database.transaction import AccountTransaction
@@ -40,8 +41,14 @@ class TransactionRepo(SQLRepo):
             debtor_name=debtor_name
         )
 
-        self._session.add(transaction)
-        await self._session.commit()
+        try:
+            self._session.add(transaction)
+            await self._session.commit()
+        except sqlalchemy.exc.IntegrityError:
+            # We are trying to insert transaction that already
+            # exists so we just return in this case
+            return
+        
         return transaction
     
     async def get_for_account_id(
@@ -50,6 +57,9 @@ class TransactionRepo(SQLRepo):
         date_from: str,
         date_to: str
     ) -> Iterable[AccountTransaction]:
+        """
+        Get transactions of account_id sorted by booking_date desc
+        """
         # Transform date_from and date_to from string to datetime objects
         from_date = datetime.strptime(date_from, "%Y-%m-%d")
         to_date = datetime.strptime(date_to, "%Y-%m-%d")
@@ -58,6 +68,7 @@ class TransactionRepo(SQLRepo):
             AccountTransaction.account_id == account_id,
             AccountTransaction.booking_date_ts >= from_date.timestamp(),
             AccountTransaction.booking_date_ts <= to_date.timestamp()
-        )
+        ).order_by(AccountTransaction.booking_date_ts.desc())
+
         account_transactions = await self._session.exec(statement)
         return account_transactions

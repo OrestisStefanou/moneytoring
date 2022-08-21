@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Iterable, Optional
+from typing import AsyncGenerator, Iterable, Optional, Tuple
 
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
@@ -47,7 +47,8 @@ class TransactionRepo(SQLRepo):
         except sqlalchemy.exc.IntegrityError:
             # We are trying to insert transaction that already
             # exists so we just return in this case
-            return
+            await self._session.rollback()
+            return  
         
         return transaction
     
@@ -72,3 +73,27 @@ class TransactionRepo(SQLRepo):
 
         account_transactions = await self._session.exec(statement)
         return account_transactions
+
+    async def get_for_account_list(
+        self,
+        accounts_tuple: Tuple[str],
+        date_from: str,
+        date_to: str
+    ): #-> AsyncGenerator[AccountTransaction]:
+        """
+        Get transactions for list of account_ids sorted by booking_date desc
+        """
+        # Transform date_from and date_to from string to datetime objects
+        from_date = datetime.strptime(date_from, "%Y-%m-%d")
+        to_date = datetime.strptime(date_to, "%Y-%m-%d")
+
+        statement = f"""SELECT * FROM  accounttransaction 
+                    WHERE booking_date_ts <= {to_date.timestamp()}
+                    AND booking_date_ts >= {from_date.timestamp()}
+                    AND accounttransaction.account_id IN {accounts_tuple}
+                    ORDER BY booking_date_ts DESC;"""
+
+        account_transactions = await self._session.exec(statement)
+        for transaction in account_transactions:
+            yield AccountTransaction(**transaction)
+

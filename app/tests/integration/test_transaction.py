@@ -317,3 +317,52 @@ class TestGetAccountTransactions:
                 'custom_category': None
             }
         ]
+
+    @pytest.mark.asyncio
+    async def test_query(
+        self,
+        test_client,
+        test_db,
+        async_session,
+        authenticated_user,
+    ):
+        transaction_repo = TransactionRepo(async_session)
+        for i in range(3):
+            await transaction_repo.add(
+                _id=f"transacion_{i}",
+                account_id='account_1',
+                amount="150.00",
+                currency="BTC",
+                information="Supermarket",
+                code="TOP_SECRET",
+                created_date="2022-07-28",
+                booking_date="2022-07-28"
+            )
+
+        for i in range(3,6):
+            await transaction_repo.add(
+                _id=f"transacion_{i}",
+                account_id='account_2',
+                amount="150.00",
+                currency="BTC",
+                information="Supermarket",
+                code="TOP_SECRET",
+                created_date="2022-07-28",
+                booking_date="2022-07-28"
+            )
+
+
+        result = [x async for x in transaction_repo.get_for_account_list(
+            accounts_tuple=("account_1", "account_2"),
+            date_from="2022-07-01",
+            date_to="2022-09-01"
+        )]
+        #print(result)
+
+        #print("SECOND WAY RESULT")
+        result = transaction_repo.get_for_account_list(
+            accounts_tuple=("account_1", "account_2"),
+            date_from="2022-07-01",
+            date_to="2022-09-01"
+        )
+        #print([x async for x in result])

@@ -366,3 +366,6 @@ class TestGetAccountTransactions:
             date_to="2022-09-01"
         )
         #print([x async for x in result])
+
+        bank_account_repo = BankAccountRepo(async_session)
+        await bank_account_repo.get_user_accounts("test_user_id")

@@ -1,4 +1,4 @@
-from typing import Iterable
+from typing import Iterable, List
 from sqlmodel.ext.asyncio.session import AsyncSession
 from sqlmodel import select
 
@@ -34,3 +34,19 @@ class BankAccountRepo(SQLRepo):
         statement = select(BankAccount).where(BankAccount.requisition_id == requistion_id)
         bank_accounts = await self._session.exec(statement)
         return bank_accounts
+
+    async def get_user_accounts(self, user_id: str) -> List[str]:
+        """
+        Returns a list with the account_ids of the user
+        """
+        statement = f"""SELECT ba.account_id 
+                        FROM Requisition r
+                        INNER JOIN BankAccount ba
+                        ON r.id = ba.requisition_id
+                        WHERE r.user_id = '{user_id}';
+        """
+        
+        results = await self._session.exec(statement)
+        return [
+            row[0] for row in results
+        ]

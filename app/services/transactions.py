@@ -1,4 +1,4 @@
-from typing import Iterable, List, Optional
+from typing import AsyncIterable, Iterable, List, Optional
 
 from sqlmodel.ext.asyncio.session import AsyncSession
 
@@ -6,6 +6,8 @@ from app.repos.nordigen_repo import NordigenRepo
 from app.repos.transaction_repo import TransactionRepo
 import app.models.http.nordigen as nordigen_models
 import app.models.database.transaction as db_transaction
+import app.services.account_history as account_history_service
+import app.services.bank_account as bank_account_service
 
 
 async def fetch_and_save_account_transactions_from_nordigen(
@@ -39,12 +41,18 @@ async def fetch_and_save_account_transactions_from_nordigen(
     return transactions
 
 
-async def get_internal_transactions(
+async def get_account_transactions(
     session: AsyncSession,
     account_id: str,
     from_date: str,
     to_date: str
 ) -> Optional[Iterable[db_transaction.AccountTransaction]]:
+    await account_history_service.check_account_history(
+        session=session,
+        account_id=account_id,
+        to_date=to_date
+    )
+
     transaction_repo = TransactionRepo(session)
     transactions = await transaction_repo.get_for_account_id(
         account_id=account_id,
@@ -79,3 +87,28 @@ async def create_internal_transaction(
         debtor_name=debtor_name
     )
     return transaction
+
+
+async def get_user_transactions(
+    session: AsyncSession,
+    user_id: str,
+    from_date: str,
+    to_date: str
+) -> Optional[AsyncIterable[db_transaction.AccountTransaction]]:
+    # Get user's account ids
+    accounts_ids = await bank_account_service.get_user_bank_accounts_ids(session, user_id)
+    
+    for account_id in accounts_ids:
+        await account_history_service.check_account_history(
+            session=session,
+            account_id=account_id,
+            to_date=to_date
+        )
+
+    transaction_repo = TransactionRepo(session)
+    transactions = await transaction_repo.get_for_account_list(
+        account_id=account_id,
+        date_from=from_date,
+        date_to=to_date
+    )
+    return transactions

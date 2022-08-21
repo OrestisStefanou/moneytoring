@@ -1,13 +1,37 @@
 from datetime import datetime, timedelta
-from typing import Iterable, Optional
+from typing import AsyncIterable, Iterable, Optional
 
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-import app.services.account_history as account_history_service
 import app.services.transactions as transaction_service
-import app.services.bank_account as bank_account_service
 import app.errors.transaction as transaction_errors
 import app.models.database.transaction as transaction_models
+import app.services.bank_account as bank_account_service
+
+
+async def get_user_transactions(
+    session: AsyncSession,
+    user_id: str,
+    from_date: Optional[str] = None,
+    to_date: Optional[str] = None
+) -> AsyncIterable[transaction_models.AccountTransaction]:
+    if from_date is None:
+        # If from date is not given we set it to 90 days prior from
+        # current date as this is max historical days we have access to
+        from_date = (datetime.now() - timedelta(days=90)).strftime("%Y-%m-%d")
+    
+    if to_date is None:
+        to_date = datetime.now().strftime("%Y-%m-%d")
+
+
+    transactions = await transaction_service.get_user_transactions(
+        session=session,
+        user_id=user_id,
+        from_date=from_date,
+        to_date=to_date
+    )
+
+    return transactions
 
 
 async def get_account_transactions(
@@ -28,13 +52,7 @@ async def get_account_transactions(
     if to_date is None:
         to_date = datetime.now().strftime("%Y-%m-%d")
 
-    await account_history_service.check_account_history(
-        session=session,
-        account_id=account_id,
-        to_date=to_date
-    )
-
-    transactions = await transaction_service.get_internal_transactions(
+    transactions = await transaction_service.get_account_transactions(
         session=session,
         account_id=account_id,
         from_date=from_date,

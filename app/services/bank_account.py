@@ -40,3 +40,9 @@ async def get_bank_account_by_id(session: AsyncSession, account_id: str) -> Opti
     bank_account_repo = BankAccountRepo(session)
     bank_account = await bank_account_repo.get(account_id)
     return bank_account
+
+
+async def get_user_bank_accounts_ids(session: AsyncSession, user_id: str) -> List[str]:
+    bank_account_repo = BankAccountRepo(session)
+    user_account_ids = await bank_account_repo.get_user_accounts(user_id)
+    return user_account_ids

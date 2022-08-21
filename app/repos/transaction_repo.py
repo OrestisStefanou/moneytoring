@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import AsyncGenerator, Iterable, Optional, Tuple
+from typing import AsyncIterable, Iterable, Optional, Tuple
 
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
@@ -79,7 +79,7 @@ class TransactionRepo(SQLRepo):
         accounts_tuple: Tuple[str],
         date_from: str,
         date_to: str
-    ): #-> AsyncGenerator[AccountTransaction]:
+    ) -> AsyncIterable[AccountTransaction]:
         """
         Get transactions for list of account_ids sorted by booking_date desc
         """

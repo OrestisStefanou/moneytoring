@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import AsyncIterable, Iterable, Optional, Tuple
+from typing import AsyncIterable, Iterable, List, Optional
 
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
@@ -76,7 +76,7 @@ class TransactionRepo(SQLRepo):
 
     async def get_for_account_list(
         self,
-        accounts_tuple: Tuple[str],
+        accounts_list: List[str],
         date_from: str,
         date_to: str
     ) -> AsyncIterable[AccountTransaction]:
@@ -90,7 +90,7 @@ class TransactionRepo(SQLRepo):
         statement = f"""SELECT * FROM  accounttransaction 
                     WHERE booking_date_ts <= {to_date.timestamp()}
                     AND booking_date_ts >= {from_date.timestamp()}
-                    AND accounttransaction.account_id IN {accounts_tuple}
+                    AND accounttransaction.account_id IN {tuple(accounts_list)}
                     ORDER BY booking_date_ts DESC;"""
 
         account_transactions = await self._session.exec(statement)

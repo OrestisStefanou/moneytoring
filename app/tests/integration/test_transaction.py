@@ -19,7 +19,7 @@ from app.tests.fixtures.app_fixtures import (
 )
 from app.repos.account_history_repo import AccountHistoryRepo
 from app.repos.transaction_repo import TransactionRepo
-
+from app.repos.requisition_repo import RequisitionRepo
 
 class TestGetAccountTransactions:
     @pytest.mark.asyncio
@@ -53,7 +53,7 @@ class TestGetAccountTransactions:
         assert response.status_code == 200
         assert response.json() == [
             {
-                'id': '2022081401927905-1',
+                'id': f"{test_account_id}-2",
                 'account_id': '26f6f755-0633-4eb4-963c-03534fe03c9e',
                 'amount': '-15.00',
                 'currency': 'EUR',
@@ -66,7 +66,7 @@ class TestGetAccountTransactions:
                 'custom_category': None
             },
             {
-                'id': '2022081401927901-1',
+                'id': f"{test_account_id}-1",
                 'account_id': '26f6f755-0633-4eb4-963c-03534fe03c9e',
                 'amount': '45.00',
                 'currency': 'EUR',
@@ -79,7 +79,7 @@ class TestGetAccountTransactions:
                 'custom_category': None
             },
             {
-                'id': '2022081401927907-1',
+                'id': f"{test_account_id}-3",
                 'account_id': '26f6f755-0633-4eb4-963c-03534fe03c9e',
                 'amount': '45.00',
                 'currency': 'EUR',
@@ -92,7 +92,7 @@ class TestGetAccountTransactions:
                 'custom_category': None
             },
             {
-                'id': '2022081401927902-1',
+                'id': f"{test_account_id}-4",
                 'account_id': '26f6f755-0633-4eb4-963c-03534fe03c9e',
                 'amount': '-15.00',
                 'currency': 'EUR',
@@ -318,54 +318,170 @@ class TestGetAccountTransactions:
             }
         ]
 
+
+class TestGetUserTransactions:
     @pytest.mark.asyncio
-    async def test_query(
+    async def test_no_account_history(
         self,
         test_client,
         test_db,
         async_session,
         authenticated_user,
+        nordigen_token,
+        httpx_mock: HTTPXMock
     ):
-        transaction_repo = TransactionRepo(async_session)
-        for i in range(3):
-            await transaction_repo.add(
-                _id=f"transacion_{i}",
-                account_id='account_1',
-                amount="150.00",
-                currency="BTC",
-                information="Supermarket",
-                code="TOP_SECRET",
-                created_date="2022-07-28",
-                booking_date="2022-07-28"
-            )
-
-        for i in range(3,6):
-            await transaction_repo.add(
-                _id=f"transacion_{i}",
-                account_id='account_2',
-                amount="150.00",
-                currency="BTC",
-                information="Supermarket",
-                code="TOP_SECRET",
-                created_date="2022-07-28",
-                booking_date="2022-07-28"
-            )
-
-
-        result = [x async for x in transaction_repo.get_for_account_list(
-            accounts_tuple=("account_1", "account_2"),
-            date_from="2022-07-01",
-            date_to="2022-09-01"
-        )]
-        #print(result)
-
-        #print("SECOND WAY RESULT")
-        result = transaction_repo.get_for_account_list(
-            accounts_tuple=("account_1", "account_2"),
-            date_from="2022-07-01",
-            date_to="2022-09-01"
+        # Prepare
+        # Crete test requisition
+        requisition_repo = RequisitionRepo(async_session)
+        await requisition_repo.add(
+            _id="test_requisition_id",
+            user_id="test_user_id",
+            institution_id="Anavargos_bank_id",
+            institution_name="Anavagros_bank",
+            link="some_link.com",
         )
-        #print([x async for x in result])
-
+        # Create test bank account
         bank_account_repo = BankAccountRepo(async_session)
-        await bank_account_repo.get_user_accounts("test_user_id")
+        test_account_id_1 = "26f6f755-0633-4eb4-963c-03534fe03c9e"
+        await bank_account_repo.add(
+            account_id=test_account_id_1,
+            requistion_id="test_requisition_id",
+            name="LaundryAccount",
+            currency="BTC"
+        )
+        mock_get_account_transactions(httpx_mock, test_account_id_1)
+        
+        test_account_id_2 = "f9a31318-a48c-4fc9-a038-5defb4db0509"
+        await bank_account_repo.add(
+            account_id=test_account_id_2,
+            requistion_id="test_requisition_id",
+            name="LaundryAccount",
+            currency="BTC"
+        )
+        mock_get_account_transactions(httpx_mock, test_account_id_2)
+
+        # Act
+        response = test_client.get(
+            f"/account_transactions"
+        )
+
+        # Assert
+        assert response.status_code == 200
+        assert response.json() == [
+            {
+                'id': '26f6f755-0633-4eb4-963c-03534fe03c9e-2',
+                'account_id': '26f6f755-0633-4eb4-963c-03534fe03c9e',
+                'amount': '-15.00',
+                'currency': 'EUR',
+                'information': 'PAYMENT Alderaan Coffe',
+                'code': 'PMNT',
+                'created_date': '2022-08-14',
+                'booking_date': '2022-08-15',
+                'debtor_name': None,
+                'category': None,
+                'custom_category': None
+            },
+            {
+                'id': 'f9a31318-a48c-4fc9-a038-5defb4db0509-2',
+                'account_id': 'f9a31318-a48c-4fc9-a038-5defb4db0509',
+                'amount': '-15.00',
+                'currency': 'EUR',
+                'information': 'PAYMENT Alderaan Coffe',
+                'code': 'PMNT',
+                'created_date': '2022-08-14',
+                'booking_date': '2022-08-15',
+                'debtor_name': None,
+                'category': None,
+                'custom_category': None
+            },
+            {
+                'id': '26f6f755-0633-4eb4-963c-03534fe03c9e-1',
+                'account_id': '26f6f755-0633-4eb4-963c-03534fe03c9e',
+                'amount': '45.00',
+                'currency': 'EUR',
+                'information': 'For the support of Restoration of the Republic foundation',
+                'code': 'PMNT',
+                'created_date': '2022-08-14',
+                'booking_date': '2022-08-14',
+                'debtor_name': 'MON MOTHMA',
+                'category': None,
+                'custom_category': None
+            },
+            {
+                'id': 'f9a31318-a48c-4fc9-a038-5defb4db0509-1',
+                'account_id': 'f9a31318-a48c-4fc9-a038-5defb4db0509',
+                'amount': '45.00',
+                'currency': 'EUR',
+                'information': 'For the support of Restoration of the Republic foundation',
+                'code': 'PMNT',
+                'created_date': '2022-08-14',
+                'booking_date': '2022-08-14',
+                'debtor_name': 'MON MOTHMA',
+                'category': None,
+                'custom_category': None
+            },
+            {
+                'id': '26f6f755-0633-4eb4-963c-03534fe03c9e-3',
+                'account_id': '26f6f755-0633-4eb4-963c-03534fe03c9e',
+                'amount': '45.00',
+                'currency': 'EUR',
+                'information': 'For the support of Restoration of the Republic foundation',
+                'code': 'PMNT',
+                'created_date': '2022-08-14',
+                'booking_date': '2022-08-13',
+                'debtor_name': 'MON MOTHMA',
+                'category': None,
+                'custom_category': None
+            },
+            {
+                'id': 'f9a31318-a48c-4fc9-a038-5defb4db0509-3',
+                'account_id': 'f9a31318-a48c-4fc9-a038-5defb4db0509',
+                'amount': '45.00',
+                'currency': 'EUR',
+                'information': 'For the support of Restoration of the Republic foundation',
+                'code': 'PMNT',
+                'created_date': '2022-08-14',
+                'booking_date': '2022-08-13',
+                'debtor_name': 'MON MOTHMA',
+                'category': None, 
+                'custom_category': None
+            },
+            {
+                'id': '26f6f755-0633-4eb4-963c-03534fe03c9e-4',
+                'account_id': '26f6f755-0633-4eb4-963c-03534fe03c9e',
+                'amount': '-15.00',
+                'currency': 'EUR',
+                'information': 'PAYMENT Alderaan Coffe',
+                'code': 'PMNT',
+                'created_date': '2022-08-14',
+                'booking_date': '2022-08-12',
+                'debtor_name': None,
+                'category': None,
+                'custom_category': None
+            },
+            {
+                'id': 'f9a31318-a48c-4fc9-a038-5defb4db0509-4',
+                'account_id': 'f9a31318-a48c-4fc9-a038-5defb4db0509',
+                'amount': '-15.00',
+                'currency': 'EUR',
+                'information': 'PAYMENT Alderaan Coffe',
+                'code': 'PMNT',
+                'created_date': '2022-08-14',
+                'booking_date': '2022-08-12',
+                'debtor_name': None,
+                'category': None,
+                'custom_category': None
+            }
+        ]
+
+        # Check that we have transactions internally
+        transaction_repo = TransactionRepo(async_session)
+        transactions = await transaction_repo.get_all()
+        assert len(transactions) == 8
+
+        # Check that we have account history
+        account_history_repo = AccountHistoryRepo(async_session)
+        account_history = await account_history_repo.get_by_account_id(test_account_id_1)
+        assert account_history.latest_date == datetime.now().strftime("%Y-%m-%d")
+        account_history = await account_history_repo.get_by_account_id(test_account_id_2)
+        assert account_history.latest_date == datetime.now().strftime("%Y-%m-%d")

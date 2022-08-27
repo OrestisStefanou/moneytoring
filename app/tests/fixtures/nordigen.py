@@ -212,7 +212,7 @@ def mock_get_account_transactions(httpx_mock: HTTPXMock, account_id: str):
         "transactions": {
             "booked": [
                 {
-                    "transactionId": "2022081401927901-1",
+                    "transactionId": f"{account_id}-1",
                     "bookingDate": "2022-08-14",
                     "valueDate": "2022-08-14",
                     "transactionAmount": {
@@ -227,7 +227,7 @@ def mock_get_account_transactions(httpx_mock: HTTPXMock, account_id: str):
                     "bankTransactionCode": "PMNT"
                 },
                 {
-                    "transactionId": "2022081401927905-1",
+                    "transactionId": f"{account_id}-2",
                     "bookingDate": "2022-08-15",
                     "valueDate": "2022-08-14",
                     "transactionAmount": {
@@ -238,7 +238,7 @@ def mock_get_account_transactions(httpx_mock: HTTPXMock, account_id: str):
                     "bankTransactionCode": "PMNT"
                 },
                 {
-                    "transactionId": "2022081401927907-1",
+                    "transactionId": f"{account_id}-3",
                     "bookingDate": "2022-08-13",
                     "valueDate": "2022-08-14",
                     "transactionAmount": {
@@ -253,7 +253,7 @@ def mock_get_account_transactions(httpx_mock: HTTPXMock, account_id: str):
                     "bankTransactionCode": "PMNT"
                 },
                 {
-                    "transactionId": "2022081401927902-1",
+                    "transactionId": f"{account_id}-4",
                     "bookingDate": "2022-08-12",
                     "valueDate": "2022-08-14",
                     "transactionAmount": {

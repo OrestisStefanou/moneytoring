@@ -73,7 +73,7 @@ def authenticated_user():
 
 
 """
-The fixure below is need by pytest_httpx
+The fixure below is needed by pytest_httpx
 """
 @pytest.fixture(scope="function")
 def assert_all_responses_were_requested() -> bool:

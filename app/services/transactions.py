@@ -106,8 +106,8 @@ async def get_user_transactions(
         )
 
     transaction_repo = TransactionRepo(session)
-    transactions = await transaction_repo.get_for_account_list(
-        account_id=account_id,
+    transactions = transaction_repo.get_for_account_list(
+        accounts_list=accounts_ids,
         date_from=from_date,
         date_to=to_date
     )

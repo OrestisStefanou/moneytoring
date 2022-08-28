@@ -8,7 +8,7 @@ from fastapi import APIRouter, Depends
 
 from app.dependencies import extract_user_id_from_token, get_session
 from app.controllers import transaction as transaction_controller
-from app.errors.transaction import AccountNotFound
+from app.errors import transaction as transaction_errros
 import app.entities.transaction as transaction_entities
 import app.utils.transaction as transaction_utils
 
@@ -94,9 +94,9 @@ async def get_account_transactions(
             from_date=from_date,
             to_date=to_date
         )
-    except AccountNotFound:
+    except transaction_errros.AccountNotFound:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
+            status_code=status.HTTP_404_NOT_FOUND,
             detail="Account with given id not found",
         )
     except Exception as err:
@@ -110,3 +110,67 @@ async def get_account_transactions(
         transaction_entities.Transaction(**internal_transaction.dict())
         for internal_transaction in transactions
     ]
+
+
+@router.put(
+    "/account_transactions/{transaction_id}/category",
+    response_model=transaction_entities.Transaction,
+    status_code=200
+)
+async def add_transaction_category(
+    transaction_id: str,
+    category: transaction_entities.TransactionCategory,
+    session: AsyncSession = Depends(get_session),
+    _: str = Depends(extract_user_id_from_token)
+):
+    try:
+        transaction = await transaction_controller.set_transaction_category(
+            session=session,
+            transaction_id=transaction_id,
+            category=category
+        )
+    except transaction_errros.TransactionNotFound:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Transaction with given id not found",
+        )
+    except Exception as err:
+        logging.exception("Unexpected error during add_transaction_category:", str(err))
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Something went wrong, we are working on it",
+        )
+
+    return transaction_entities.Transaction(**transaction.dict())
+
+
+@router.put(
+    "/account_transactions/{transaction_id}/custom_category",
+    response_model=transaction_entities.Transaction,
+    status_code=200
+)
+async def add_transaction_custom_category(
+    transaction_id: str,
+    category: str,
+    session: AsyncSession = Depends(get_session),
+    _: str = Depends(extract_user_id_from_token)
+):
+    try:
+        transaction = await transaction_controller.set_transaction_custom_category(
+            session=session,
+            transaction_id=transaction_id,
+            category=category
+        )
+    except transaction_errros.TransactionNotFound:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Transaction with given id not found",
+        )
+    except Exception as err:
+        logging.exception("Unexpected error during add_transaction_custom_category:", str(err))
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Something went wrong, we are working on it",
+        )
+
+    return transaction_entities.Transaction(**transaction.dict())

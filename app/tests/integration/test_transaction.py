@@ -319,6 +319,26 @@ class TestGetAccountTransactions:
         ]
 
 
+    @pytest.mark.asyncio
+    async def test_account_not_found(
+        self,
+        test_client,
+        test_db,
+        async_session,
+        authenticated_user,
+        nordigen_token,
+        httpx_mock: HTTPXMock
+    ):
+        # Prepare
+        # Act
+        response = test_client.get(
+            f"/account_transactions/26f6f755-0633-4eb4-963c-03534fe03c9e"
+        )
+
+        # Assert
+        assert response.status_code == 404
+        assert response.json()['detail'] == "Account with given id not found"
+
 class TestGetUserTransactions:
     @pytest.mark.asyncio
     async def test_no_account_history(
@@ -802,3 +822,135 @@ class TestGetUserTransactions:
                 'custom_category': None
             }
         ]
+
+
+class TestSetTransactionCategory:
+    @pytest.mark.asyncio
+    async def test_success(
+        self,
+        test_client,
+        test_db,
+        async_session,
+        authenticated_user,
+    ):
+        # Prepare
+        # Create mock transactions
+        transaction_repo = TransactionRepo(async_session)
+        for i in range(5):
+            await transaction_repo.add(
+                _id=f"transacion_{i}",
+                account_id="test_account_id",
+                amount="150.00",
+                currency="BTC",
+                information="Supermarket",
+                code="TOP_SECRET",
+                created_date="2022-07-28",
+                booking_date="2022-07-28"
+            )
+
+        # Act
+        response = test_client.put(
+            f"/account_transactions/transacion_0/category?category=food"
+        )
+
+        # Assert
+        assert response.status_code == 200
+        assert response.json() == {
+            'id': 'transacion_0',
+            'account_id': 'test_account_id',
+            'amount': '150.00',
+            'currency': 'BTC',
+            'information': 'Supermarket',
+            'code': 'TOP_SECRET',
+            'created_date': '2022-07-28',
+            'booking_date': '2022-07-28',
+            'debtor_name': None,
+            'category': 'food',
+            'custom_category': None
+        }
+
+        # Assert internal transaction is updated
+        transaction = await transaction_repo.get("transacion_0")
+        assert transaction.category == "food"
+
+    @pytest.mark.asyncio
+    async def test_not_found(
+        self,
+        test_client,
+        test_db,
+        authenticated_user,
+    ):
+        # Act
+        response = test_client.put(
+            f"/account_transactions/transacion_0/category?category=food"
+        )
+
+        # Assert
+        assert response.status_code == 404
+        assert response.json()['detail'] == "Transaction with given id not found"
+
+
+class TestSetTransactionCustomCategory:
+    @pytest.mark.asyncio
+    async def test_success(
+        self,
+        test_client,
+        test_db,
+        async_session,
+        authenticated_user,
+    ):
+        # Prepare
+        # Create mock transactions
+        transaction_repo = TransactionRepo(async_session)
+        for i in range(5):
+            await transaction_repo.add(
+                _id=f"transacion_{i}",
+                account_id="test_account_id",
+                amount="150.00",
+                currency="BTC",
+                information="Supermarket",
+                code="TOP_SECRET",
+                created_date="2022-07-28",
+                booking_date="2022-07-28"
+            )
+
+        # Act
+        response = test_client.put(
+            f"/account_transactions/transacion_0/custom_category?category=Drugs"
+        )
+
+        # Assert
+        assert response.status_code == 200
+        assert response.json() == {
+            'id': 'transacion_0',
+            'account_id': 'test_account_id',
+            'amount': '150.00',
+            'currency': 'BTC',
+            'information': 'Supermarket',
+            'code': 'TOP_SECRET',
+            'created_date': '2022-07-28',
+            'booking_date': '2022-07-28',
+            'debtor_name': None,
+            'category': None,
+            'custom_category': 'Drugs'
+        }
+
+        # Assert internal transaction is updated
+        transaction = await transaction_repo.get("transacion_0")
+        assert transaction.custom_category == "Drugs"
+
+    @pytest.mark.asyncio
+    async def test_not_found(
+        self,
+        test_client,
+        test_db,
+        authenticated_user,
+    ):
+        # Act
+        response = test_client.put(
+            f"/account_transactions/transacion_0/custom_category?category=Drugs"
+        )
+
+        # Assert
+        assert response.status_code == 404
+        assert response.json()['detail'] == "Transaction with given id not found"

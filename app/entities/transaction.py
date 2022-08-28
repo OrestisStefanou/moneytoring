@@ -1,6 +1,9 @@
 from typing import Optional
 from pydantic import BaseModel
 
+from app.models.database.transaction import TransactionCategory
+
+
 class Transaction(BaseModel):
     id: str
     account_id: str

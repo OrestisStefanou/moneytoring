@@ -6,7 +6,7 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 import sqlalchemy
 
 from app.repos.sql_repo import SQLRepo
-from app.models.database.transaction import AccountTransaction
+from app.models.database.transaction import AccountTransaction,TransactionCategory
 
 class TransactionRepo(SQLRepo):
     def __init__(self, session: AsyncSession) -> None:
@@ -97,3 +97,42 @@ class TransactionRepo(SQLRepo):
         for transaction in account_transactions:
             yield AccountTransaction(**transaction)
 
+    async def set_category(
+        self,
+        transaction_id: str,
+        category: TransactionCategory,
+    ) -> Optional[AccountTransaction]:
+        """
+        Sets category to AccountTransaction with id=transaction_id
+        Returns None if transaction with given id does not exist
+        """
+        transaction = await self.get(transaction_id)
+        if transaction is None:
+            return None
+
+        transaction.category = category
+
+        self._session.add(transaction)
+        await self._session.commit()
+        await self._session.refresh(transaction)
+        return transaction
+
+    async def set_custom_category(
+        self,
+        transaction_id: str,
+        custom_category: str,
+    ) -> Optional[AccountTransaction]:
+        """
+        Sets category to AccountTransaction with id=transaction_id
+        Returns None if transaction with given id does not exist
+        """
+        transaction = await self.get(transaction_id)
+        if transaction is None:
+            return None
+
+        transaction.custom_category = custom_category
+
+        self._session.add(transaction)
+        await self._session.commit()
+        await self._session.refresh(transaction)
+        return transaction

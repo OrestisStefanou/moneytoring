@@ -112,3 +112,33 @@ async def get_user_transactions(
         date_to=to_date
     )
     return transactions
+
+
+async def set_transaction_category(
+    session: AsyncSession,
+    transaction_id: str,
+    category: db_transaction.TransactionCategory
+) -> Optional[db_transaction.AccountTransaction]:
+    """
+    Sets a category to a transaction and return the updated
+    transaction model.Returns None in case that transaction 
+    with given id doesn't exist
+    """
+    transaction_repo = TransactionRepo(session)
+    updated_transaction =  await transaction_repo.set_category(transaction_id, category)
+    return updated_transaction
+
+
+async def set_transaction_custom_category(
+    session: AsyncSession,
+    transaction_id: str,
+    custom_category: str
+) -> Optional[db_transaction.AccountTransaction]:
+    """
+    Sets a category to a transaction and return the updated
+    transaction model.Returns None in case that transaction 
+    with given id doesn't exist
+    """
+    transaction_repo = TransactionRepo(session)
+    updated_transaction =  await transaction_repo.set_custom_category(transaction_id, custom_category)
+    return updated_transaction

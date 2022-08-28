@@ -60,3 +60,37 @@ async def get_account_transactions(
     )
 
     return transactions
+
+
+async def set_transaction_category(
+    session: AsyncSession,
+    transaction_id: str,
+    category: transaction_models.TransactionCategory
+) -> transaction_models.AccountTransaction:
+    updated_transaction = await transaction_service.set_transaction_category(
+        session=session,
+        transaction_id=transaction_id,
+        category=category
+    )
+
+    if updated_transaction is None:
+        raise transaction_errors.TransactionNotFound()
+    
+    return updated_transaction
+
+
+async def set_transaction_custom_category(
+    session: AsyncSession,
+    transaction_id: str,
+    category: str
+) -> transaction_models.AccountTransaction:
+    updated_transaction = await transaction_service.set_transaction_custom_category(
+        session=session,
+        transaction_id=transaction_id,
+        custom_category=category
+    )
+
+    if updated_transaction is None:
+        raise transaction_errors.TransactionNotFound()
+    
+    return updated_transaction

@@ -292,7 +292,7 @@ def mock_get_account_transactions_wtih_dates(
         "transactions": {
             "booked": [
                 {
-                    "transactionId": "2022081401927901-1",
+                    "transactionId": f"{account_id}-1",
                     "bookingDate": date_from,
                     "valueDate": date_from,
                     "transactionAmount": {
@@ -307,7 +307,7 @@ def mock_get_account_transactions_wtih_dates(
                     "bankTransactionCode": "PMNT"
                 },
                 {
-                    "transactionId": "2022081401927905-1",
+                    "transactionId": f"{account_id}-2",
                     "bookingDate": date_from,
                     "valueDate": date_from,
                     "transactionAmount": {

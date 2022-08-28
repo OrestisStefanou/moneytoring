@@ -171,7 +171,7 @@ class TestGetAccountTransactions:
         assert response.status_code == 200
         assert response.json() == [
             {
-                'id': '2022081401927901-1',
+                'id': f'{test_account_id}-1',
                 'account_id': '26f6f755-0633-4eb4-963c-03534fe03c9e',
                 'amount': '45.00',
                 'currency': 'EUR',
@@ -184,7 +184,7 @@ class TestGetAccountTransactions:
                 'custom_category': None
             },
             {
-                'id': '2022081401927905-1',
+                'id': f'{test_account_id}-2',
                 'account_id': '26f6f755-0633-4eb4-963c-03534fe03c9e',
                 'amount': '-15.00',
                 'currency': 'EUR',
@@ -485,3 +485,320 @@ class TestGetUserTransactions:
         assert account_history.latest_date == datetime.now().strftime("%Y-%m-%d")
         account_history = await account_history_repo.get_by_account_id(test_account_id_2)
         assert account_history.latest_date == datetime.now().strftime("%Y-%m-%d")
+
+    @pytest.mark.asyncio
+    async def test_account_history_outdated(
+        self,
+        test_client,
+        test_db,
+        async_session,
+        authenticated_user,
+        nordigen_token,
+        httpx_mock: HTTPXMock
+    ):
+        # Prepare
+        # Crete test requisition
+        requisition_repo = RequisitionRepo(async_session)
+        await requisition_repo.add(
+            _id="test_requisition_id",
+            user_id="test_user_id",
+            institution_id="Anavargos_bank_id",
+            institution_name="Anavagros_bank",
+            link="some_link.com",
+        )
+        # Create test bank accounts
+        bank_account_repo = BankAccountRepo(async_session)
+        test_account_id = "26f6f755-0633-4eb4-963c-03534fe03c9e"
+        await bank_account_repo.add(
+            account_id=test_account_id,
+            requistion_id="test_requisition_id",
+            name="LaundryAccount",
+            currency="BTC"
+        )
+
+        test_account_id_2 = "f9a31318-a48c-4fc9-a038-5defb4db0509"
+        await bank_account_repo.add(
+            account_id=test_account_id_2,
+            requistion_id="test_requisition_id",
+            name="LaundryAccount",
+            currency="BTC"
+        )
+
+        # Create test account history
+        account_history_repo = AccountHistoryRepo(async_session)
+        await account_history_repo.add(
+            account_id=test_account_id,
+            latest_date="2022-07-30"
+        )
+        await account_history_repo.add(
+            account_id=test_account_id_2,
+            latest_date="2022-07-30"
+        )
+        # Create mock transactions
+        transaction_repo = TransactionRepo(async_session)
+        await transaction_repo.add(
+            _id=f"transacion_0",
+            account_id=test_account_id,
+            amount="150.00",
+            currency="BTC",
+            information="Supermarket",
+            code="TOP_SECRET",
+            created_date="2022-07-28",
+            booking_date="2022-07-28"
+        )
+        await transaction_repo.add(
+            _id=f"transacion_1",
+            account_id=test_account_id_2,
+            amount="50.00",
+            currency="BTC",
+            information="Molly with the purple rain",
+            code="MOLLY",
+            created_date="2022-07-27",
+            booking_date="2022-07-27"
+        )
+
+        # Mock nordigen responses
+        mock_get_account_transactions_wtih_dates(
+            httpx_mock=httpx_mock,
+            account_id=test_account_id,
+            date_from="2022-07-30",
+        )
+
+        mock_get_account_transactions_wtih_dates(
+            httpx_mock=httpx_mock,
+            account_id=test_account_id_2,
+            date_from="2022-07-30",
+        )
+
+        # Act
+        response = test_client.get(
+            f"/account_transactions?to_date=2022-08-15"
+        )
+
+        # Assert
+        assert response.status_code == 200
+        assert response.json() == [
+            {
+                'id': '26f6f755-0633-4eb4-963c-03534fe03c9e-1',
+                'account_id': '26f6f755-0633-4eb4-963c-03534fe03c9e',
+                'amount': '45.00',
+                'currency': 'EUR',
+                'information': 'For the support of Restoration of the Republic foundation',
+                'code': 'PMNT',
+                'created_date': '2022-07-30',
+                'booking_date': '2022-07-30',
+                'debtor_name': 'MON MOTHMA',
+                'category': None,
+                'custom_category': None
+            },
+            {
+                'id': '26f6f755-0633-4eb4-963c-03534fe03c9e-2',
+                'account_id': '26f6f755-0633-4eb4-963c-03534fe03c9e',
+                'amount': '-15.00',
+                'currency': 'EUR',
+                'information': 'PAYMENT Alderaan Coffe',
+                'code': 'PMNT',
+                'created_date': '2022-07-30',
+                'booking_date': '2022-07-30',
+                'debtor_name': None,
+                'category': None,
+                'custom_category': None
+            },
+            {
+                'id': 'f9a31318-a48c-4fc9-a038-5defb4db0509-1',
+                'account_id': 'f9a31318-a48c-4fc9-a038-5defb4db0509',
+                'amount': '45.00',
+                'currency': 'EUR',
+                'information': 'For the support of Restoration of the Republic foundation',
+                'code': 'PMNT',
+                'created_date': '2022-07-30',
+                'booking_date': '2022-07-30',
+                'debtor_name': 'MON MOTHMA',
+                'category': None,
+                'custom_category': None
+            },
+            {
+                'id': 'f9a31318-a48c-4fc9-a038-5defb4db0509-2',
+                'account_id': 'f9a31318-a48c-4fc9-a038-5defb4db0509',
+                'amount': '-15.00',
+                'currency': 'EUR',
+                'information': 'PAYMENT Alderaan Coffe',
+                'code': 'PMNT',
+                'created_date': '2022-07-30',
+                'booking_date': '2022-07-30',
+                'debtor_name': None,
+                'category': None,
+                'custom_category': None
+            },
+            {
+                'id': 'transacion_0',
+                'account_id': '26f6f755-0633-4eb4-963c-03534fe03c9e',
+                'amount': '150.00',
+                'currency': 'BTC',
+                'information': 'Supermarket',
+                'code': 'TOP_SECRET',
+                'created_date': '2022-07-28',
+                'booking_date': '2022-07-28',
+                'debtor_name': None,
+                'category': None,
+                'custom_category': None
+            },
+            {
+                'id': 'transacion_1',
+                'account_id': 'f9a31318-a48c-4fc9-a038-5defb4db0509',
+                'amount': '50.00',
+                'currency': 'BTC',
+                'information': 'Molly with the purple rain',
+                'code': 'MOLLY',
+                'created_date': '2022-07-27',
+                'booking_date': '2022-07-27',
+                'debtor_name': None,
+                'category': None,
+                'custom_category': None
+            }
+        ]
+
+        transactions = await transaction_repo.get_all()
+        assert len(transactions) == 6
+
+        # Assert that account history is updated
+        account_history = await account_history_repo.get_by_account_id(test_account_id)
+        assert account_history.latest_date == datetime.now().strftime("%Y-%m-%d")
+
+        account_history = await account_history_repo.get_by_account_id(test_account_id_2)
+        assert account_history.latest_date == datetime.now().strftime("%Y-%m-%d")
+
+    @pytest.mark.asyncio
+    async def test_account_history_covers_request(
+        self,
+        test_client,
+        test_db,
+        async_session,
+        authenticated_user,
+    ):
+        # Prepare
+        # Crete test requisition
+        requisition_repo = RequisitionRepo(async_session)
+        await requisition_repo.add(
+            _id="test_requisition_id",
+            user_id="test_user_id",
+            institution_id="Anavargos_bank_id",
+            institution_name="Anavagros_bank",
+            link="some_link.com",
+        )
+
+        # Create test bank account
+        bank_account_repo = BankAccountRepo(async_session)
+        test_account_id = "26f6f755-0633-4eb4-963c-03534fe03c9e"
+        await bank_account_repo.add(
+            account_id=test_account_id,
+            requistion_id="test_requisition_id",
+            name="LaundryAccount",
+            currency="BTC"
+        )
+        test_account_id_2 = "f9a31318-a48c-4fc9-a038-5defb4db0509"
+        await bank_account_repo.add(
+            account_id=test_account_id_2,
+            requistion_id="test_requisition_id",
+            name="LaundryAccount",
+            currency="BTC"
+        )
+
+        # Create test account history
+        account_history_repo = AccountHistoryRepo(async_session)
+        await account_history_repo.add(
+            account_id=test_account_id,
+            latest_date="2022-07-30"
+        )
+        account_history_repo = AccountHistoryRepo(async_session)
+        await account_history_repo.add(
+            account_id=test_account_id_2,
+            latest_date="2022-07-30"
+        )
+
+        # Create mock transactions
+        transaction_repo = TransactionRepo(async_session)
+        for i in range(2):
+            await transaction_repo.add(
+                _id=f"transacion_{i}",
+                account_id=test_account_id,
+                amount="150.00",
+                currency="BTC",
+                information="Supermarket",
+                code="TOP_SECRET",
+                created_date="2022-07-28",
+                booking_date="2022-07-28"
+            )
+        for i in range(2,4):
+            await transaction_repo.add(
+                _id=f"transacion_{i}",
+                account_id=test_account_id_2,
+                amount="50.00",
+                currency="BTC",
+                information="Ecstasy is fantasy",
+                code="MDMA",
+                created_date="2022-07-27",
+                booking_date="2022-07-27"
+            )
+
+        # Act
+        response = test_client.get(
+            f"/account_transactions?to_date=2022-07-28"
+        )
+
+        # Assert
+        assert response.status_code == 200
+        assert response.json() == [
+            {
+                'id': 'transacion_0',
+                'account_id': '26f6f755-0633-4eb4-963c-03534fe03c9e',
+                'amount': '150.00',
+                'currency': 'BTC',
+                'information': 'Supermarket',
+                'code': 'TOP_SECRET',
+                'created_date': '2022-07-28',
+                'booking_date': '2022-07-28',
+                'debtor_name': None,
+                'category': None,
+                'custom_category': None
+            },
+            {
+                'id': 'transacion_1',
+                'account_id': '26f6f755-0633-4eb4-963c-03534fe03c9e',
+                'amount': '150.00',
+                'currency': 'BTC',
+                'information': 'Supermarket',
+                'code': 'TOP_SECRET',
+                'created_date': '2022-07-28',
+                'booking_date': '2022-07-28',
+                'debtor_name': None,
+                'category': None, 
+                'custom_category': None
+            },
+            {
+                'id': 'transacion_2',
+                'account_id': 'f9a31318-a48c-4fc9-a038-5defb4db0509',
+                'amount': '50.00',
+                'currency': 'BTC',
+                'information': 'Ecstasy is fantasy',
+                'code': 'MDMA',
+                'created_date': '2022-07-27',
+                'booking_date': '2022-07-27',
+                'debtor_name': None,
+                'category': None, 
+                'custom_category': None
+            },
+            {
+                'id': 'transacion_3',
+                'account_id': 'f9a31318-a48c-4fc9-a038-5defb4db0509',
+                'amount': '50.00',
+                'currency': 'BTC',
+                'information': 'Ecstasy is fantasy',
+                'code': 'MDMA',
+                'created_date': '2022-07-27',
+                'booking_date': '2022-07-27',
+                'debtor_name': None,
+                'category': None, 
+                'custom_category': None
+            }
+        ]

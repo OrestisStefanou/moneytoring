@@ -56,7 +56,9 @@ class TransactionRepo(SQLRepo):
         self,
         account_id: str,
         date_from: str,
-        date_to: str
+        date_to: str,
+        category: Optional[TransactionCategory] = None,
+        custom_category: Optional[str] = None
     ) -> Iterable[AccountTransaction]:
         """
         Get transactions of account_id sorted by booking_date desc
@@ -65,11 +67,23 @@ class TransactionRepo(SQLRepo):
         from_date = datetime.strptime(date_from, "%Y-%m-%d")
         to_date = datetime.strptime(date_to, "%Y-%m-%d")
 
-        statement = select(AccountTransaction).where(
+        where_conditions = [
             AccountTransaction.account_id == account_id,
             AccountTransaction.booking_date_ts >= from_date.timestamp(),
             AccountTransaction.booking_date_ts <= to_date.timestamp()
-        ).order_by(AccountTransaction.booking_date_ts.desc())
+        ]
+
+        if category is not None:
+            where_conditions.append(
+                AccountTransaction.category == category
+            )
+
+        if custom_category is not None:
+            where_conditions.append(
+                AccountTransaction.custom_category == custom_category
+            )
+
+        statement = select(AccountTransaction).where(*where_conditions).order_by(AccountTransaction.booking_date_ts.desc())
 
         account_transactions = await self._session.exec(statement)
         return account_transactions

@@ -38,7 +38,9 @@ async def get_account_transactions(
     session: AsyncSession,
     account_id: str,
     from_date: Optional[str] = None,
-    to_date: Optional[str] = None
+    to_date: Optional[str] = None,
+    category: Optional[transaction_models.TransactionCategory] = None,
+    custom_category: Optional[str] = None,
 ) -> Iterable[transaction_models.AccountTransaction]:
     bank_account = await bank_account_service.get_bank_account_by_id(session, account_id)
     if bank_account is None:
@@ -56,7 +58,9 @@ async def get_account_transactions(
         session=session,
         account_id=account_id,
         from_date=from_date,
-        to_date=to_date
+        to_date=to_date,
+        category=category,
+        custom_category=custom_category
     )
 
     return transactions

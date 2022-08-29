@@ -45,7 +45,9 @@ async def get_account_transactions(
     session: AsyncSession,
     account_id: str,
     from_date: str,
-    to_date: str
+    to_date: str,
+    category: Optional[db_transaction.TransactionCategory] = None,
+    custom_category: Optional[str] = None,
 ) -> Optional[Iterable[db_transaction.AccountTransaction]]:
     await account_history_service.check_account_history(
         session=session,
@@ -57,7 +59,9 @@ async def get_account_transactions(
     transactions = await transaction_repo.get_for_account_id(
         account_id=account_id,
         date_from=from_date,
-        date_to=to_date
+        date_to=to_date,
+        category=category,
+        custom_category=custom_category
     )
     return transactions
 

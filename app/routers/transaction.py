@@ -69,6 +69,8 @@ async def get_account_transactions(
     account_id: uuid.UUID,
     from_date: Optional[str] = None,
     to_date: Optional[str] = None,
+    category: Optional[transaction_entities.TransactionCategory] = None,
+    custom_category: Optional[str] = None,
     session: AsyncSession = Depends(get_session),
     _: str = Depends(extract_user_id_from_token)
 ):
@@ -92,7 +94,9 @@ async def get_account_transactions(
             session=session,
             account_id=str(account_id),
             from_date=from_date,
-            to_date=to_date
+            to_date=to_date,
+            category=category,
+            custom_category=custom_category
         )
     except transaction_errros.AccountNotFound:
         raise HTTPException(

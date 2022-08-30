@@ -409,6 +409,258 @@ class TestGetAccountTransactions:
 
 
     @pytest.mark.asyncio
+    async def test_custom_category_filter(
+        self,
+        test_client,
+        test_db,
+        async_session,
+        authenticated_user,
+    ):
+        # Prepare
+        bank_account_repo = BankAccountRepo(async_session)
+        test_account_id = "26f6f755-0633-4eb4-963c-03534fe03c9e"
+        await bank_account_repo.add(
+            account_id=test_account_id,
+            requistion_id="test_requisition_id",
+            name="LaundryAccount",
+            currency="BTC"
+        )
+        # Create test account history
+        account_history_repo = AccountHistoryRepo(async_session)
+        await account_history_repo.add(
+            account_id=test_account_id,
+            latest_date=datetime.now().strftime("%Y-%m-%d")
+        )
+        # Create mock transactions
+        transaction_repo = TransactionRepo(async_session)
+        for i in range(1,11):
+            await transaction_repo.add(
+                _id=f"transacion_{i}",
+                account_id=test_account_id,
+                amount="150.00",
+                currency="BTC",
+                information="Supermarket",
+                code="TOP_SECRET",
+                created_date="2022-07-28",
+                booking_date=f"2022-07-{i}"
+            )
+
+        await transactions_services.set_transaction_custom_category(
+            session=async_session,
+            transaction_id="transacion_1",
+            custom_category="Classified"
+        )
+
+        await transactions_services.set_transaction_custom_category(
+            session=async_session,
+            transaction_id="transacion_3",
+            custom_category="Classified"
+        )
+
+        # Act
+        response = test_client.get(
+            f"/account_transactions/{test_account_id}?custom_category=Classified&to_date=2022-08-01"
+        )
+
+        # Assert
+        assert response.status_code == 200
+        assert response.json() == [
+            {
+                'id': 'transacion_3',
+                'account_id': '26f6f755-0633-4eb4-963c-03534fe03c9e',
+                'amount': '150.00',
+                'currency': 'BTC',
+                'information': 'Supermarket',
+                'code': 'TOP_SECRET',
+                'created_date': '2022-07-28',
+                'booking_date': '2022-07-3',
+                'debtor_name': None,
+                'category': None,
+                'custom_category': 'Classified'
+            },
+            {
+                'id': 'transacion_1',
+                'account_id': '26f6f755-0633-4eb4-963c-03534fe03c9e',
+                'amount': '150.00',
+                'currency': 'BTC',
+                'information': 'Supermarket',
+                'code': 'TOP_SECRET',
+                'created_date': '2022-07-28',
+                'booking_date': '2022-07-1',
+                'debtor_name': None,
+                'category': None, 
+                'custom_category': 'Classified'
+            }
+        ]
+
+
+    @pytest.mark.asyncio
+    async def test_categories_filter(
+        self,
+        test_client,
+        test_db,
+        async_session,
+        authenticated_user,
+    ):
+        # Prepare
+        bank_account_repo = BankAccountRepo(async_session)
+        test_account_id = "26f6f755-0633-4eb4-963c-03534fe03c9e"
+        await bank_account_repo.add(
+            account_id=test_account_id,
+            requistion_id="test_requisition_id",
+            name="LaundryAccount",
+            currency="BTC"
+        )
+        # Create test account history
+        account_history_repo = AccountHistoryRepo(async_session)
+        await account_history_repo.add(
+            account_id=test_account_id,
+            latest_date=datetime.now().strftime("%Y-%m-%d")
+        )
+        # Create mock transactions
+        transaction_repo = TransactionRepo(async_session)
+        for i in range(1,11):
+            await transaction_repo.add(
+                _id=f"transacion_{i}",
+                account_id=test_account_id,
+                amount="150.00",
+                currency="BTC",
+                information="Supermarket",
+                code="TOP_SECRET",
+                created_date="2022-07-28",
+                booking_date=f"2022-07-{i}"
+            )
+
+        await transactions_services.set_transaction_custom_category(
+            session=async_session,
+            transaction_id="transacion_1",
+            custom_category="Classified"
+        )
+
+        await transactions_services.set_transaction_custom_category(
+            session=async_session,
+            transaction_id="transacion_3",
+            custom_category="Classified"
+        )
+
+        await transactions_services.set_transaction_category(
+            session=async_session,
+            transaction_id="transacion_3",
+            category="food"
+        )
+
+        # Act
+        response = test_client.get(
+            f"/account_transactions/{test_account_id}?custom_category=Classified&category=food&to_date=2022-08-01"
+        )
+
+        # Assert
+        assert response.status_code == 200
+        assert response.json() == [
+            {
+                'id': 'transacion_3',
+                'account_id': '26f6f755-0633-4eb4-963c-03534fe03c9e',
+                'amount': '150.00',
+                'currency': 'BTC',
+                'information': 'Supermarket',
+                'code': 'TOP_SECRET',
+                'created_date': '2022-07-28',
+                'booking_date': '2022-07-3',
+                'debtor_name': None,
+                'category': 'food',
+                'custom_category': 'Classified'
+            }
+        ]
+
+
+    @pytest.mark.asyncio
+    async def test_date_range_filter(
+        self,
+        test_client,
+        test_db,
+        async_session,
+        authenticated_user,
+    ):
+        # Prepare
+        bank_account_repo = BankAccountRepo(async_session)
+        test_account_id = "26f6f755-0633-4eb4-963c-03534fe03c9e"
+        await bank_account_repo.add(
+            account_id=test_account_id,
+            requistion_id="test_requisition_id",
+            name="LaundryAccount",
+            currency="BTC"
+        )
+        # Create test account history
+        account_history_repo = AccountHistoryRepo(async_session)
+        await account_history_repo.add(
+            account_id=test_account_id,
+            latest_date=datetime.now().strftime("%Y-%m-%d")
+        )
+        # Create mock transactions
+        transaction_repo = TransactionRepo(async_session)
+        for i in range(1,11):
+            await transaction_repo.add(
+                _id=f"transacion_{i}",
+                account_id=test_account_id,
+                amount="150.00",
+                currency="BTC",
+                information="Supermarket",
+                code="TOP_SECRET",
+                created_date="2022-07-28",
+                booking_date=f"2022-07-{i}"
+            )
+
+        # Act
+        response = test_client.get(
+            f"/account_transactions/{test_account_id}?from_date=2022-07-03&to_date=2022-07-05"
+        )
+
+        # Assert
+        assert response.status_code == 200
+        assert response.json() == [
+            {
+                'id': 'transacion_5',
+                'account_id': '26f6f755-0633-4eb4-963c-03534fe03c9e',
+                'amount': '150.00',
+                'currency': 'BTC',
+                'information': 'Supermarket',
+                'code': 'TOP_SECRET',
+                'created_date': '2022-07-28',
+                'booking_date': '2022-07-5',
+                'debtor_name': None,
+                'category': None,
+                'custom_category': None
+            },
+            {
+                'id': 'transacion_4',
+                'account_id': '26f6f755-0633-4eb4-963c-03534fe03c9e',
+                'amount': '150.00',
+                'currency': 'BTC',
+                'information': 'Supermarket',
+                'code': 'TOP_SECRET',
+                'created_date': '2022-07-28',
+                'booking_date': '2022-07-4',
+                'debtor_name': None,
+                'category': None, 
+                'custom_category': None
+            },
+            {
+                'id': 'transacion_3',
+                'account_id': '26f6f755-0633-4eb4-963c-03534fe03c9e',
+                'amount': '150.00',
+                'currency': 'BTC',
+                'information': 'Supermarket',
+                'code': 'TOP_SECRET',
+                'created_date': '2022-07-28',
+                'booking_date': '2022-07-3',
+                'debtor_name': None,
+                'category': None, 
+                'custom_category': None
+            }
+        ]
+
+
+    @pytest.mark.asyncio
     async def test_account_not_found(
         self,
         test_client,

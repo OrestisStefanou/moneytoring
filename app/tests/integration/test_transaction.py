@@ -1165,6 +1165,504 @@ class TestGetUserTransactions:
         ]
 
 
+    @pytest.mark.asyncio
+    async def test_category_filter(
+        self,
+        test_client,
+        test_db,
+        async_session,
+        authenticated_user,
+    ):
+        # Prepare
+        # Crete test requisition
+        requisition_repo = RequisitionRepo(async_session)
+        await requisition_repo.add(
+            _id="test_requisition_id",
+            user_id="test_user_id",
+            institution_id="Anavargos_bank_id",
+            institution_name="Anavagros_bank",
+            link="some_link.com",
+        )
+
+        # Create test bank account
+        bank_account_repo = BankAccountRepo(async_session)
+        test_account_id = "26f6f755-0633-4eb4-963c-03534fe03c9e"
+        await bank_account_repo.add(
+            account_id=test_account_id,
+            requistion_id="test_requisition_id",
+            name="LaundryAccount",
+            currency="BTC"
+        )
+        test_account_id_2 = "f9a31318-a48c-4fc9-a038-5defb4db0509"
+        await bank_account_repo.add(
+            account_id=test_account_id_2,
+            requistion_id="test_requisition_id",
+            name="LaundryAccount",
+            currency="BTC"
+        )
+
+        # Create test account history
+        account_history_repo = AccountHistoryRepo(async_session)
+        await account_history_repo.add(
+            account_id=test_account_id,
+            latest_date=datetime.now().strftime("%Y-%m-%d")
+        )
+        account_history_repo = AccountHistoryRepo(async_session)
+        await account_history_repo.add(
+            account_id=test_account_id_2,
+            latest_date=datetime.now().strftime("%Y-%m-%d")
+        )
+
+        # Create mock transactions
+        transaction_repo = TransactionRepo(async_session)
+        for i in range(2):
+            await transaction_repo.add(
+                _id=f"transacion_{i}",
+                account_id=test_account_id,
+                amount="150.00",
+                currency="BTC",
+                information="Supermarket",
+                code="TOP_SECRET",
+                created_date="2022-07-28",
+                booking_date="2022-07-28"
+            )
+        for i in range(2,4):
+            await transaction_repo.add(
+                _id=f"transacion_{i}",
+                account_id=test_account_id_2,
+                amount="50.00",
+                currency="BTC",
+                information="Ecstasy is fantasy",
+                code="MDMA",
+                created_date="2022-07-27",
+                booking_date="2022-07-27"
+            )
+
+        await transactions_services.set_transaction_category(
+            session=async_session,
+            transaction_id="transacion_1",
+            category="healthcare"
+        )
+
+        await transactions_services.set_transaction_category(
+            session=async_session,
+            transaction_id="transacion_3",
+            category="healthcare"
+        )
+
+        # Act
+        response = test_client.get(
+            f"/account_transactions?to_date=2022-07-28&category=healthcare"
+        )
+
+        # Assert
+        assert response.status_code == 200
+        assert response.json() == [
+            {
+                'id': 'transacion_1',
+                'account_id': '26f6f755-0633-4eb4-963c-03534fe03c9e',
+                'amount': '150.00',
+                'currency': 'BTC',
+                'information': 'Supermarket',
+                'code': 'TOP_SECRET',
+                'created_date': '2022-07-28',
+                'booking_date': '2022-07-28',
+                'debtor_name': None,
+                'category': 'healthcare', 
+                'custom_category': None
+            },
+            {
+                'id': 'transacion_3',
+                'account_id': 'f9a31318-a48c-4fc9-a038-5defb4db0509',
+                'amount': '50.00',
+                'currency': 'BTC',
+                'information': 'Ecstasy is fantasy',
+                'code': 'MDMA',
+                'created_date': '2022-07-27',
+                'booking_date': '2022-07-27',
+                'debtor_name': None,
+                'category': 'healthcare', 
+                'custom_category': None
+            }
+        ]
+
+
+    @pytest.mark.asyncio
+    async def test_custom_category_filter(
+        self,
+        test_client,
+        test_db,
+        async_session,
+        authenticated_user,
+    ):
+        # Prepare
+        # Crete test requisition
+        requisition_repo = RequisitionRepo(async_session)
+        await requisition_repo.add(
+            _id="test_requisition_id",
+            user_id="test_user_id",
+            institution_id="Anavargos_bank_id",
+            institution_name="Anavagros_bank",
+            link="some_link.com",
+        )
+
+        # Create test bank account
+        bank_account_repo = BankAccountRepo(async_session)
+        test_account_id = "26f6f755-0633-4eb4-963c-03534fe03c9e"
+        await bank_account_repo.add(
+            account_id=test_account_id,
+            requistion_id="test_requisition_id",
+            name="LaundryAccount",
+            currency="BTC"
+        )
+        test_account_id_2 = "f9a31318-a48c-4fc9-a038-5defb4db0509"
+        await bank_account_repo.add(
+            account_id=test_account_id_2,
+            requistion_id="test_requisition_id",
+            name="LaundryAccount",
+            currency="BTC"
+        )
+
+        # Create test account history
+        account_history_repo = AccountHistoryRepo(async_session)
+        await account_history_repo.add(
+            account_id=test_account_id,
+            latest_date=datetime.now().strftime("%Y-%m-%d")
+        )
+        account_history_repo = AccountHistoryRepo(async_session)
+        await account_history_repo.add(
+            account_id=test_account_id_2,
+            latest_date=datetime.now().strftime("%Y-%m-%d")
+        )
+
+        # Create mock transactions
+        transaction_repo = TransactionRepo(async_session)
+        for i in range(2):
+            await transaction_repo.add(
+                _id=f"transacion_{i}",
+                account_id=test_account_id,
+                amount="150.00",
+                currency="BTC",
+                information="Supermarket",
+                code="TOP_SECRET",
+                created_date="2022-07-28",
+                booking_date="2022-07-28"
+            )
+        for i in range(2,4):
+            await transaction_repo.add(
+                _id=f"transacion_{i}",
+                account_id=test_account_id_2,
+                amount="50.00",
+                currency="BTC",
+                information="Ecstasy is fantasy",
+                code="MDMA",
+                created_date="2022-07-27",
+                booking_date="2022-07-27"
+            )
+
+        await transactions_services.set_transaction_custom_category(
+            session=async_session,
+            transaction_id="transacion_1",
+            custom_category="charity"
+        )
+
+        await transactions_services.set_transaction_custom_category(
+            session=async_session,
+            transaction_id="transacion_3",
+            custom_category="charity"
+        )
+
+        # Act
+        response = test_client.get(
+            f"/account_transactions?to_date=2022-07-28&custom_category=charity"
+        )
+
+        # Assert
+        assert response.status_code == 200
+        assert response.json() == [
+            {
+                'id': 'transacion_1',
+                'account_id': '26f6f755-0633-4eb4-963c-03534fe03c9e',
+                'amount': '150.00',
+                'currency': 'BTC',
+                'information': 'Supermarket',
+                'code': 'TOP_SECRET',
+                'created_date': '2022-07-28',
+                'booking_date': '2022-07-28',
+                'debtor_name': None,
+                'category': None, 
+                'custom_category': 'charity'
+            },
+            {
+                'id': 'transacion_3',
+                'account_id': 'f9a31318-a48c-4fc9-a038-5defb4db0509',
+                'amount': '50.00',
+                'currency': 'BTC',
+                'information': 'Ecstasy is fantasy',
+                'code': 'MDMA',
+                'created_date': '2022-07-27',
+                'booking_date': '2022-07-27',
+                'debtor_name': None,
+                'category': None, 
+                'custom_category': 'charity'
+            }
+        ]
+
+    @pytest.mark.asyncio
+    async def test_category_filtering(
+        self,
+        test_client,
+        test_db,
+        async_session,
+        authenticated_user,
+    ):
+        # Prepare
+        # Crete test requisition
+        requisition_repo = RequisitionRepo(async_session)
+        await requisition_repo.add(
+            _id="test_requisition_id",
+            user_id="test_user_id",
+            institution_id="Anavargos_bank_id",
+            institution_name="Anavagros_bank",
+            link="some_link.com",
+        )
+
+        # Create test bank account
+        bank_account_repo = BankAccountRepo(async_session)
+        test_account_id = "26f6f755-0633-4eb4-963c-03534fe03c9e"
+        await bank_account_repo.add(
+            account_id=test_account_id,
+            requistion_id="test_requisition_id",
+            name="LaundryAccount",
+            currency="BTC"
+        )
+        test_account_id_2 = "f9a31318-a48c-4fc9-a038-5defb4db0509"
+        await bank_account_repo.add(
+            account_id=test_account_id_2,
+            requistion_id="test_requisition_id",
+            name="LaundryAccount",
+            currency="BTC"
+        )
+
+        # Create test account history
+        account_history_repo = AccountHistoryRepo(async_session)
+        await account_history_repo.add(
+            account_id=test_account_id,
+            latest_date=datetime.now().strftime("%Y-%m-%d")
+        )
+        account_history_repo = AccountHistoryRepo(async_session)
+        await account_history_repo.add(
+            account_id=test_account_id_2,
+            latest_date=datetime.now().strftime("%Y-%m-%d")
+        )
+
+        # Create mock transactions
+        transaction_repo = TransactionRepo(async_session)
+        for i in range(2):
+            await transaction_repo.add(
+                _id=f"transacion_{i}",
+                account_id=test_account_id,
+                amount="150.00",
+                currency="BTC",
+                information="Supermarket",
+                code="TOP_SECRET",
+                created_date="2022-07-28",
+                booking_date="2022-07-28"
+            )
+        for i in range(2,4):
+            await transaction_repo.add(
+                _id=f"transacion_{i}",
+                account_id=test_account_id_2,
+                amount="50.00",
+                currency="BTC",
+                information="Ecstasy is fantasy",
+                code="MDMA",
+                created_date="2022-07-27",
+                booking_date="2022-07-27"
+            )
+
+        await transactions_services.set_transaction_category(
+            session=async_session,
+            transaction_id="transacion_1",
+            category="healthcare"
+        )
+
+        await transactions_services.set_transaction_custom_category(
+            session=async_session,
+            transaction_id="transacion_1",
+            custom_category="charity"
+        )
+
+        await transactions_services.set_transaction_custom_category(
+            session=async_session,
+            transaction_id="transacion_3",
+            custom_category="charity"
+        )
+
+        # Act
+        response = test_client.get(
+            f"/account_transactions?to_date=2022-07-28&custom_category=charity&category=healthcare"
+        )
+
+        # Assert
+        assert response.status_code == 200
+        assert response.json() == [
+            {
+                'id': 'transacion_1',
+                'account_id': '26f6f755-0633-4eb4-963c-03534fe03c9e',
+                'amount': '150.00',
+                'currency': 'BTC',
+                'information': 'Supermarket',
+                'code': 'TOP_SECRET',
+                'created_date': '2022-07-28',
+                'booking_date': '2022-07-28',
+                'debtor_name': None,
+                'category': 'healthcare', 
+                'custom_category': 'charity'
+            }
+        ]
+
+    @pytest.mark.asyncio
+    async def test_date_range_filtering(
+        self,
+        test_client,
+        test_db,
+        async_session,
+        authenticated_user,
+    ):
+        # Prepare
+        # Crete test requisition
+        requisition_repo = RequisitionRepo(async_session)
+        await requisition_repo.add(
+            _id="test_requisition_id",
+            user_id="test_user_id",
+            institution_id="Anavargos_bank_id",
+            institution_name="Anavagros_bank",
+            link="some_link.com",
+        )
+
+        # Create test bank account
+        bank_account_repo = BankAccountRepo(async_session)
+        test_account_id = "26f6f755-0633-4eb4-963c-03534fe03c9e"
+        await bank_account_repo.add(
+            account_id=test_account_id,
+            requistion_id="test_requisition_id",
+            name="LaundryAccount",
+            currency="BTC"
+        )
+        test_account_id_2 = "f9a31318-a48c-4fc9-a038-5defb4db0509"
+        await bank_account_repo.add(
+            account_id=test_account_id_2,
+            requistion_id="test_requisition_id",
+            name="LaundryAccount",
+            currency="BTC"
+        )
+
+        # Create test account history
+        account_history_repo = AccountHistoryRepo(async_session)
+        await account_history_repo.add(
+            account_id=test_account_id,
+            latest_date=datetime.now().strftime("%Y-%m-%d")
+        )
+        account_history_repo = AccountHistoryRepo(async_session)
+        await account_history_repo.add(
+            account_id=test_account_id_2,
+            latest_date=datetime.now().strftime("%Y-%m-%d")
+        )
+
+        # Create mock transactions
+        transaction_repo = TransactionRepo(async_session)
+        for i in range(1,3):
+            await transaction_repo.add(
+                _id=f"transacion_{i}",
+                account_id=test_account_id,
+                amount="150.00",
+                currency="BTC",
+                information="Supermarket",
+                code="TOP_SECRET",
+                created_date="2022-07-28",
+                booking_date=f"2022-07-{i}"
+            )
+        for i in range(3,10):
+            await transaction_repo.add(
+                _id=f"transacion_{i}",
+                account_id=test_account_id_2,
+                amount="50.00",
+                currency="BTC",
+                information="Ecstasy is fantasy",
+                code="MDMA",
+                created_date="2022-07-27",
+                booking_date=f"2022-07-{i}"
+            )
+
+        await transactions_services.set_transaction_category(
+            session=async_session,
+            transaction_id="transacion_1",
+            category="healthcare"
+        )
+
+        await transactions_services.set_transaction_custom_category(
+            session=async_session,
+            transaction_id="transacion_1",
+            custom_category="charity"
+        )
+
+        await transactions_services.set_transaction_custom_category(
+            session=async_session,
+            transaction_id="transacion_3",
+            custom_category="charity"
+        )
+
+        # Act
+        response = test_client.get(
+            f"/account_transactions?to_date=2022-07-04&from_date=2022-07-02"
+        )
+
+        # Assert
+        assert response.status_code == 200
+        assert response.json() == [
+            {
+                'id': 'transacion_4',
+                'account_id': 'f9a31318-a48c-4fc9-a038-5defb4db0509',
+                'amount': '50.00',
+                'currency': 'BTC',
+                'information': 'Ecstasy is fantasy',
+                'code': 'MDMA',
+                'created_date': '2022-07-27',
+                'booking_date': '2022-07-4',
+                'debtor_name': None,
+                'category': None, 
+                'custom_category': None
+            },
+            {
+                'id': 'transacion_3',
+                'account_id': 'f9a31318-a48c-4fc9-a038-5defb4db0509',
+                'amount': '50.00',
+                'currency': 'BTC',
+                'information': 'Ecstasy is fantasy',
+                'code': 'MDMA',
+                'created_date': '2022-07-27',
+                'booking_date': '2022-07-4',
+                'debtor_name': None,
+                'category': None, 
+                'custom_category': None
+            },
+            {
+                'id': 'transacion_2',
+                'account_id': '26f6f755-0633-4eb4-963c-03534fe03c9e',
+                'amount': '150.00',
+                'currency': 'BTC',
+                'information': 'Supermarket',
+                'code': 'TOP_SECRET',
+                'created_date': '2022-07-28',
+                'booking_date': '2022-07-28',
+                'debtor_name': None,
+                'category': None, 
+                'custom_category': None
+            },
+        ]
+
+
 class TestSetTransactionCategory:
     @pytest.mark.asyncio
     async def test_success(

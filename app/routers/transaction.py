@@ -128,6 +128,7 @@ async def get_account_transactions(
 async def add_transaction_category(
     transaction_id: str,
     category: transaction_entities.TransactionCategory,
+    set_all: bool = False,
     session: AsyncSession = Depends(get_session),
     _: str = Depends(extract_user_id_from_token)
 ):
@@ -135,7 +136,8 @@ async def add_transaction_category(
         transaction = await transaction_controller.set_transaction_category(
             session=session,
             transaction_id=transaction_id,
-            category=category
+            category=category,
+            set_all=set_all
         )
     except transaction_errros.TransactionNotFound:
         raise HTTPException(
@@ -160,6 +162,7 @@ async def add_transaction_category(
 async def add_transaction_custom_category(
     transaction_id: str,
     category: str,
+    set_all: bool = False,
     session: AsyncSession = Depends(get_session),
     _: str = Depends(extract_user_id_from_token)
 ):
@@ -167,7 +170,8 @@ async def add_transaction_custom_category(
         transaction = await transaction_controller.set_transaction_custom_category(
             session=session,
             transaction_id=transaction_id,
-            category=category
+            category=category,
+            set_all=set_all
         )
     except transaction_errros.TransactionNotFound:
         raise HTTPException(

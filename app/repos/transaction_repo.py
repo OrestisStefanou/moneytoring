@@ -121,10 +121,20 @@ class TransactionRepo(SQLRepo):
         for transaction in account_transactions:
             yield AccountTransaction(**transaction)
 
+    async def get_by_information(
+        self,
+        information: str
+    ) -> Optional[List[AccountTransaction]]:
+        statement = select(AccountTransaction).where(AccountTransaction.information == information)
+        transactions = await self._session.exec(statement)
+        return transactions
+
+
     async def set_category(
         self,
         transaction_id: str,
         category: TransactionCategory,
+        set_all: bool = False
     ) -> Optional[AccountTransaction]:
         """
         Sets category to AccountTransaction with id=transaction_id
@@ -137,6 +147,13 @@ class TransactionRepo(SQLRepo):
         transaction.category = category
 
         self._session.add(transaction)
+
+        if set_all:
+            same_info_transactions = await self.get_by_information(transaction.information)
+            for same_info_transaction in same_info_transactions:
+                same_info_transaction.category = category
+                self._session.add(same_info_transaction)
+
         await self._session.commit()
         await self._session.refresh(transaction)
         return transaction
@@ -145,6 +162,7 @@ class TransactionRepo(SQLRepo):
         self,
         transaction_id: str,
         custom_category: str,
+        set_all: bool = False
     ) -> Optional[AccountTransaction]:
         """
         Sets category to AccountTransaction with id=transaction_id
@@ -157,6 +175,14 @@ class TransactionRepo(SQLRepo):
         transaction.custom_category = custom_category
 
         self._session.add(transaction)
+
+
+        if set_all:
+            same_info_transactions = await self.get_by_information(transaction.information)
+            for same_info_transaction in same_info_transactions:
+                same_info_transaction.custom_category = custom_category
+                self._session.add(same_info_transaction)
+
         await self._session.commit()
         await self._session.refresh(transaction)
         return transaction

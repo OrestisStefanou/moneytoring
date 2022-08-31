@@ -73,12 +73,14 @@ async def get_account_transactions(
 async def set_transaction_category(
     session: AsyncSession,
     transaction_id: str,
-    category: transaction_models.TransactionCategory
+    category: transaction_models.TransactionCategory,
+    set_all: bool = False
 ) -> transaction_models.AccountTransaction:
     updated_transaction = await transaction_service.set_transaction_category(
         session=session,
         transaction_id=transaction_id,
-        category=category
+        category=category,
+        set_all=set_all
     )
 
     if updated_transaction is None:
@@ -90,12 +92,14 @@ async def set_transaction_category(
 async def set_transaction_custom_category(
     session: AsyncSession,
     transaction_id: str,
-    category: str
+    category: str,
+    set_all: bool = False
 ) -> transaction_models.AccountTransaction:
     updated_transaction = await transaction_service.set_transaction_custom_category(
         session=session,
         transaction_id=transaction_id,
-        custom_category=category
+        custom_category=category,
+        set_all=set_all
     )
 
     if updated_transaction is None:

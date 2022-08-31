@@ -1695,6 +1695,68 @@ class TestSetTransactionCategory:
         assert transaction.category == "food"
 
     @pytest.mark.asyncio
+    async def test_mark_all(
+        self,
+        test_client,
+        test_db,
+        async_session,
+        authenticated_user,
+    ):
+        # Prepare
+        # Create mock transactions
+        transaction_repo = TransactionRepo(async_session)
+        for i in range(2):
+            await transaction_repo.add(
+                _id=f"transacion_{i}",
+                account_id="test_account_id",
+                amount="150.00",
+                currency="BTC",
+                information="Supermarket",
+                code="TOP_SECRET",
+                created_date="2022-07-28",
+                booking_date="2022-07-28"
+            )
+
+        for i in range(2,5):
+            await transaction_repo.add(
+                _id=f"transacion_{i}",
+                account_id="test_account_id",
+                amount="50.00",
+                currency="EUR",
+                information="Pharmacy",
+                code="TOP_SECRET",
+                created_date="2022-07-28",
+                booking_date="2022-07-28"
+            )
+    
+        # Act
+        response = test_client.put(
+            f"/account_transactions/transacion_0/category?category=food&set_all=True"
+        )
+
+        # Assert
+        assert response.status_code == 200
+        assert response.json() == {
+            'id': 'transacion_0',
+            'account_id': 'test_account_id',
+            'amount': '150.00',
+            'currency': 'BTC',
+            'information': 'Supermarket',
+            'code': 'TOP_SECRET',
+            'created_date': '2022-07-28',
+            'booking_date': '2022-07-28',
+            'debtor_name': None,
+            'category': 'food',
+            'custom_category': None
+        }
+
+        # Assert internal transactions are updated
+        transaction = await transaction_repo.get("transacion_0")
+        assert transaction.category == "food"
+        transaction = await transaction_repo.get("transacion_1")
+        assert transaction.category == "food"
+
+    @pytest.mark.asyncio
     async def test_not_found(
         self,
         test_client,
@@ -1758,6 +1820,68 @@ class TestSetTransactionCustomCategory:
 
         # Assert internal transaction is updated
         transaction = await transaction_repo.get("transacion_0")
+        assert transaction.custom_category == "Drugs"
+
+    @pytest.mark.asyncio
+    async def test_set_all(
+        self,
+        test_client,
+        test_db,
+        async_session,
+        authenticated_user,
+    ):
+        # Prepare
+        # Create mock transactions
+        transaction_repo = TransactionRepo(async_session)
+        for i in range(2):
+            await transaction_repo.add(
+                _id=f"transacion_{i}",
+                account_id="test_account_id",
+                amount="150.00",
+                currency="BTC",
+                information="Supermarket",
+                code="TOP_SECRET",
+                created_date="2022-07-28",
+                booking_date="2022-07-28"
+            )
+
+        for i in range(2,5):
+            await transaction_repo.add(
+                _id=f"transacion_{i}",
+                account_id="test_account_id",
+                amount="15.00",
+                currency="EUR",
+                information="Pharmacy",
+                code="TOP_SECRET",
+                created_date="2022-07-28",
+                booking_date="2022-07-28"
+            )
+
+        # Act
+        response = test_client.put(
+            f"/account_transactions/transacion_0/custom_category?category=Drugs&set_all=True"
+        )
+
+        # Assert
+        assert response.status_code == 200
+        assert response.json() == {
+            'id': 'transacion_0',
+            'account_id': 'test_account_id',
+            'amount': '150.00',
+            'currency': 'BTC',
+            'information': 'Supermarket',
+            'code': 'TOP_SECRET',
+            'created_date': '2022-07-28',
+            'booking_date': '2022-07-28',
+            'debtor_name': None,
+            'category': None,
+            'custom_category': 'Drugs'
+        }
+
+        # Assert internal transactions are updated
+        transaction = await transaction_repo.get("transacion_0")
+        assert transaction.custom_category == "Drugs"
+        transaction = await transaction_repo.get("transacion_1")
         assert transaction.custom_category == "Drugs"
 
     @pytest.mark.asyncio

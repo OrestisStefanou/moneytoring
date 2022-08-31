@@ -13,7 +13,9 @@ async def get_user_transactions(
     session: AsyncSession,
     user_id: str,
     from_date: Optional[str] = None,
-    to_date: Optional[str] = None
+    to_date: Optional[str] = None,
+    category: Optional[transaction_models.TransactionCategory] = None,
+    custom_category: Optional[str] = None
 ) -> AsyncIterable[transaction_models.AccountTransaction]:
     if from_date is None:
         # If from date is not given we set it to 90 days prior from
@@ -28,7 +30,9 @@ async def get_user_transactions(
         session=session,
         user_id=user_id,
         from_date=from_date,
-        to_date=to_date
+        to_date=to_date,
+        category=category,
+        custom_category=custom_category
     )
 
     return transactions

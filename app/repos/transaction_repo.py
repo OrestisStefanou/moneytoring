@@ -92,7 +92,9 @@ class TransactionRepo(SQLRepo):
         self,
         accounts_list: List[str],
         date_from: str,
-        date_to: str
+        date_to: str,
+        category: Optional[TransactionCategory] = None,
+        custom_category: Optional[str] = None
     ) -> AsyncIterable[AccountTransaction]:
         """
         Get transactions for list of account_ids sorted by booking_date desc
@@ -101,11 +103,19 @@ class TransactionRepo(SQLRepo):
         from_date = datetime.strptime(date_from, "%Y-%m-%d")
         to_date = datetime.strptime(date_to, "%Y-%m-%d")
 
-        statement = f"""SELECT * FROM  accounttransaction 
-                    WHERE booking_date_ts <= {to_date.timestamp()}
+        where_conditions = f"""WHERE booking_date_ts <= {to_date.timestamp()}
                     AND booking_date_ts >= {from_date.timestamp()}
-                    AND accounttransaction.account_id IN {tuple(accounts_list)}
-                    ORDER BY booking_date_ts DESC;"""
+                    AND account_id IN {tuple(accounts_list)} """
+        
+        if category:
+            where_conditions += f"AND category = '{category}' "
+
+        if custom_category:
+            where_conditions += f"AND custom_category = '{custom_category}' "
+
+        order_by_condition = "ORDER BY booking_date_ts DESC"
+
+        statement = f"SELECT * FROM  accounttransaction {where_conditions} {order_by_condition};"
 
         account_transactions = await self._session.exec(statement)
         for transaction in account_transactions:

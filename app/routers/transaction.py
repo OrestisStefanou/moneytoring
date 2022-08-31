@@ -22,6 +22,8 @@ router = APIRouter(tags=["Account Transactions"])
 async def get_user_transactions(
     from_date: Optional[str] = None,
     to_date: Optional[str] = None,
+    category: Optional[transaction_entities.TransactionCategory] = None,
+    custom_category: Optional[str] = None,
     session: AsyncSession = Depends(get_session),
     user_id: str = Depends(extract_user_id_from_token)
 ):
@@ -45,7 +47,9 @@ async def get_user_transactions(
             session=session,
             user_id=user_id,
             from_date=from_date,
-            to_date=to_date
+            to_date=to_date,
+            category=category,
+            custom_category=custom_category
         )
     except Exception as err:
         logging.exception("Unexpected error during get user transactions:", str(err))

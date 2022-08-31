@@ -97,7 +97,9 @@ async def get_user_transactions(
     session: AsyncSession,
     user_id: str,
     from_date: str,
-    to_date: str
+    to_date: str,
+    category: Optional[db_transaction.TransactionCategory] = None,
+    custom_category: Optional[str] = None,
 ) -> Optional[AsyncIterable[db_transaction.AccountTransaction]]:
     # Get user's account ids
     accounts_ids = await bank_account_service.get_user_bank_accounts_ids(session, user_id)
@@ -113,7 +115,9 @@ async def get_user_transactions(
     transactions = transaction_repo.get_for_account_list(
         accounts_list=accounts_ids,
         date_from=from_date,
-        date_to=to_date
+        date_to=to_date,
+        category=category,
+        custom_category=custom_category
     )
     return transactions
 

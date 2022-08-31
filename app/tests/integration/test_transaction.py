@@ -1595,24 +1595,6 @@ class TestGetUserTransactions:
                 booking_date=f"2022-07-{i}"
             )
 
-        await transactions_services.set_transaction_category(
-            session=async_session,
-            transaction_id="transacion_1",
-            category="healthcare"
-        )
-
-        await transactions_services.set_transaction_custom_category(
-            session=async_session,
-            transaction_id="transacion_1",
-            custom_category="charity"
-        )
-
-        await transactions_services.set_transaction_custom_category(
-            session=async_session,
-            transaction_id="transacion_3",
-            custom_category="charity"
-        )
-
         # Act
         response = test_client.get(
             f"/account_transactions?to_date=2022-07-04&from_date=2022-07-02"
@@ -1642,7 +1624,7 @@ class TestGetUserTransactions:
                 'information': 'Ecstasy is fantasy',
                 'code': 'MDMA',
                 'created_date': '2022-07-27',
-                'booking_date': '2022-07-4',
+                'booking_date': '2022-07-3',
                 'debtor_name': None,
                 'category': None, 
                 'custom_category': None
@@ -1655,7 +1637,7 @@ class TestGetUserTransactions:
                 'information': 'Supermarket',
                 'code': 'TOP_SECRET',
                 'created_date': '2022-07-28',
-                'booking_date': '2022-07-28',
+                'booking_date': '2022-07-2',
                 'debtor_name': None,
                 'category': None, 
                 'custom_category': None

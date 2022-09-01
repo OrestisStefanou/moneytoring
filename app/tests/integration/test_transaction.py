@@ -1899,3 +1899,88 @@ class TestSetTransactionCustomCategory:
         # Assert
         assert response.status_code == 404
         assert response.json()['detail'] == "Transaction with given id not found"
+
+
+class TestGetAccountTotalSpent:
+    @pytest.mark.asyncio
+    async def test_no_params(
+        self,
+        test_client,
+        test_db,
+        async_session,
+        authenticated_user,
+    ):
+        # Prepare
+        test_account_id = "26f6f755-0633-4eb4-963c-03534fe03c9e"
+        bank_account_repo = BankAccountRepo(session=async_session)
+        await bank_account_repo.add(
+            account_id=test_account_id,
+            requistion_id="test_requisition_id",
+            name="LaundryAccount",
+            currency="BTC"
+        )
+
+        # Create mock transactions
+        transaction_repo = TransactionRepo(async_session)
+        for i in range(1,11):
+            await transaction_repo.add(
+                _id=f"transacion_{i}",
+                account_id=test_account_id,
+                amount="-50.00",
+                currency="EUR",
+                information="Supermarket",
+                code="TOP_SECRET",
+                created_date="2022-07-28",
+                booking_date=f"2022-07-{i}"
+            )
+
+        # Act
+        response = test_client.get(
+            f"/account_transactions/{test_account_id}/total_spent"
+        )
+
+        # Assert
+        assert response.status_code == 200
+        assert response.json() == {"total_spent": -500.0}
+
+
+    @pytest.mark.asyncio
+    async def test_date_range(
+        self,
+        test_client,
+        test_db,
+        async_session,
+        authenticated_user,
+    ):
+        # Prepare
+        test_account_id = "26f6f755-0633-4eb4-963c-03534fe03c9e"
+        bank_account_repo = BankAccountRepo(session=async_session)
+        await bank_account_repo.add(
+            account_id=test_account_id,
+            requistion_id="test_requisition_id",
+            name="LaundryAccount",
+            currency="BTC"
+        )
+
+        # Create mock transactions
+        transaction_repo = TransactionRepo(async_session)
+        for i in range(1,11):
+            await transaction_repo.add(
+                _id=f"transacion_{i}",
+                account_id=test_account_id,
+                amount="-50.00",
+                currency="EUR",
+                information="Supermarket",
+                code="TOP_SECRET",
+                created_date="2022-07-28",
+                booking_date=f"2022-07-{i}"
+            )
+
+        # Act
+        response = test_client.get(
+            f"/account_transactions/{test_account_id}/total_spent?from_date=2022-07-01&to_date=2022-07-05"
+        )
+
+        # Assert
+        assert response.status_code == 200
+        assert response.json() == {"total_spent": -250.0}

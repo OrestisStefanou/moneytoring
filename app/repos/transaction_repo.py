@@ -1,4 +1,5 @@
 from datetime import datetime
+from decimal import Decimal
 from typing import AsyncIterable, Iterable, List, Optional
 
 from sqlmodel import select
@@ -186,3 +187,87 @@ class TransactionRepo(SQLRepo):
         await self._session.commit()
         await self._session.refresh(transaction)
         return transaction
+
+    async def get_total_spent_for_account(
+        self,
+        account_id: str,
+        date_from: str,
+        date_to: str,
+        category: Optional[TransactionCategory] = None,
+        custom_category: Optional[str] = None
+    ) -> Decimal:
+        transactions = await self.get_for_account_id(
+            account_id=account_id,
+            date_from=date_from,
+            date_to=date_to,
+            category=category,
+            custom_category=custom_category
+        )
+
+        return sum(
+            Decimal(transaction.amount) 
+            for transaction in transactions if Decimal(transaction.amount) < 0
+        )
+
+    async def get_total_credited_for_account(
+        self,
+        account_id: str,
+        date_from: str,
+        date_to: str,
+        category: Optional[TransactionCategory] = None,
+        custom_category: Optional[str] = None
+    ) -> Decimal:
+        transactions = await self.get_for_account_id(
+            account_id=account_id,
+            date_from=date_from,
+            date_to=date_to,
+            category=category,
+            custom_category=custom_category
+        )
+
+        return sum(
+            Decimal(transaction.amount) 
+            for transaction in transactions if Decimal(transaction.amount) > 0
+        )
+
+    async def get_total_spend_for_account_list(
+        self,
+        accounts_list: List[str],
+        date_from: str,
+        date_to: str,
+        category: Optional[TransactionCategory] = None,
+        custom_category: Optional[str] = None
+    ) -> Decimal:
+        transactions = self.get_for_account_list(
+            accounts_list=accounts_list,
+            date_from=date_from,
+            date_to=date_to,
+            category=category,
+            custom_category=custom_category
+        )
+
+        return sum(
+            Decimal(transaction.amount) 
+            async for transaction in transactions if Decimal(transaction.amount) < 0
+        )
+
+    async def get_total_credited_for_account_list(
+        self,
+        accounts_list: List[str],
+        date_from: str,
+        date_to: str,
+        category: Optional[TransactionCategory] = None,
+        custom_category: Optional[str] = None
+    ) -> Decimal:
+        transactions = self.get_for_account_list(
+            accounts_list=accounts_list,
+            date_from=date_from,
+            date_to=date_to,
+            category=category,
+            custom_category=custom_category
+        )
+
+        return sum(
+            Decimal(transaction.amount) 
+            async for transaction in transactions if Decimal(transaction.amount) > 0
+        )

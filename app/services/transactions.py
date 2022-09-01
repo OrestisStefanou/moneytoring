@@ -1,3 +1,4 @@
+from decimal import Decimal
 from typing import AsyncIterable, Iterable, List, Optional
 
 from sqlmodel.ext.asyncio.session import AsyncSession
@@ -154,3 +155,85 @@ async def set_transaction_custom_category(
     transaction_repo = TransactionRepo(session)
     updated_transaction =  await transaction_repo.set_custom_category(transaction_id, custom_category, set_all)
     return updated_transaction
+
+
+async def get_total_spent_amount_of_account(
+    session: AsyncSession,
+    account_id: str,
+    from_date: str,
+    to_date: str,
+    category: Optional[db_transaction.TransactionCategory] = None,
+    custom_category: Optional[str] = None,
+) -> Decimal:
+    transaction_repo = TransactionRepo(session)
+    total_spent = await transaction_repo.get_total_spent_for_account(
+        account_id=account_id,
+        date_from=from_date,
+        date_to=to_date,
+        category=category,
+        custom_category=custom_category
+    )
+    return total_spent
+
+
+async def get_total_credited_amount_of_account(
+    session: AsyncSession,
+    account_id: str,
+    from_date: str,
+    to_date: str,
+    category: Optional[db_transaction.TransactionCategory] = None,
+    custom_category: Optional[str] = None,
+) -> Decimal:
+    transaction_repo = TransactionRepo(session)
+    total_credited = await transaction_repo.get_total_credited_for_account(
+        account_id=account_id,
+        date_from=from_date,
+        date_to=to_date,
+        category=category,
+        custom_category=custom_category
+    )
+    return total_credited
+
+
+async def get_total_spent_amount_of_user(
+    session: AsyncSession,
+    user_id: str,
+    from_date: str,
+    to_date: str,
+    category: Optional[db_transaction.TransactionCategory] = None,
+    custom_category: Optional[str] = None,
+) -> Decimal:
+    # Get user's account ids
+    accounts_ids = await bank_account_service.get_user_bank_accounts_ids(session, user_id)
+
+    transaction_repo = TransactionRepo(session)
+    total_spent = await transaction_repo.get_total_spend_for_account_list(
+        accounts_list=accounts_ids,
+        date_from=from_date,
+        date_to=to_date,
+        category=category,
+        custom_category=custom_category
+    )
+    return total_spent
+
+
+async def get_total_credited_amount_of_user(
+    session: AsyncSession,
+    user_id: str,
+    from_date: str,
+    to_date: str,
+    category: Optional[db_transaction.TransactionCategory] = None,
+    custom_category: Optional[str] = None,
+) -> Decimal:
+    # Get user's account ids
+    accounts_ids = await bank_account_service.get_user_bank_accounts_ids(session, user_id)
+
+    transaction_repo = TransactionRepo(session)
+    total_credited = await transaction_repo.get_total_credited_for_account_list(
+        accounts_list=accounts_ids,
+        date_from=from_date,
+        date_to=to_date,
+        category=category,
+        custom_category=custom_category
+    )
+    return total_credited

@@ -1,4 +1,6 @@
 from typing import Optional
+from decimal import Decimal
+
 from pydantic import BaseModel
 
 from app.models.database.transaction import TransactionCategory
@@ -19,8 +21,8 @@ class Transaction(BaseModel):
 
 
 class TotalSpentResponse(BaseModel):
-    total_spent: int
+    total_spent: Decimal
 
 
 class TotalCreditedResponse(BaseModel):
-    total_credited: int
+    total_credited: Decimal

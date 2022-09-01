@@ -186,3 +186,69 @@ async def add_transaction_custom_category(
         )
 
     return transaction_entities.Transaction(**transaction.dict())
+
+
+@router.get(
+    "/account_transactions/total_spent",
+    response_model=transaction_entities.TotalSpentResponse,
+    status_code=200
+)
+async def get_user_total_spent(
+    from_date: Optional[str] = None,
+    to_date: Optional[str] = None,
+    category: Optional[transaction_entities.TransactionCategory] = None,
+    custom_category: Optional[str] = None,
+    session: AsyncSession = Depends(get_session),
+    user_id: str = Depends(extract_user_id_from_token)
+):
+    pass
+
+
+@router.get(
+    "/account_transactions/{account_id}/total_spent",
+    response_model=transaction_entities.TotalSpentResponse,
+    status_code=200
+)
+async def get_account_total_spent(
+    account_id: uuid.UUID,
+    from_date: Optional[str] = None,
+    to_date: Optional[str] = None,
+    category: Optional[transaction_entities.TransactionCategory] = None,
+    custom_category: Optional[str] = None,
+    session: AsyncSession = Depends(get_session),
+    _: str = Depends(extract_user_id_from_token)
+):
+    pass
+
+
+@router.get(
+    "/account_transactions/total_credited",
+    response_model=transaction_entities.TotalCreditedResponse,
+    status_code=200
+)
+async def get_user_total_credited(
+    from_date: Optional[str] = None,
+    to_date: Optional[str] = None,
+    category: Optional[transaction_entities.TransactionCategory] = None,
+    custom_category: Optional[str] = None,
+    session: AsyncSession = Depends(get_session),
+    user_id: str = Depends(extract_user_id_from_token)
+):
+    pass
+
+
+@router.get(
+    "/account_transactions/{account_id}/total_credited",
+    response_model=transaction_entities.TotalCreditedResponse,
+    status_code=200
+)
+async def get_account_total_credited(
+    account_id: uuid.UUID,
+    from_date: Optional[str] = None,
+    to_date: Optional[str] = None,
+    category: Optional[transaction_entities.TransactionCategory] = None,
+    custom_category: Optional[str] = None,
+    session: AsyncSession = Depends(get_session),
+    _: str = Depends(extract_user_id_from_token)
+):
+    pass

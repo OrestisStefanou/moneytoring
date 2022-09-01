@@ -16,3 +16,11 @@ class Transaction(BaseModel):
     debtor_name: Optional[str] = None
     category: Optional[str] = None
     custom_category: Optional[str] = None
+
+
+class TotalSpentResponse(BaseModel):
+    total_spent: int
+
+
+class TotalCreditedResponse(BaseModel):
+    total_credited: int

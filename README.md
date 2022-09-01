@@ -18,5 +18,5 @@ pytest app/tests/
 # Next steps
 1. Transition to another database(Postgres, CockroachDB)
 2. Add analytics endpoints?
-    1. Modify endpoints that set category to a transaction to accept an option to mark all transactions with the same information
-    2. Endpoints to get amount that spent and amount that was credited per account and total
+    1. Endpoints to get amount that spent and amount that was credited per account and total
+    2. 

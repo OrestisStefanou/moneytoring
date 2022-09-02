@@ -139,3 +139,35 @@ async def get_account_total_spent_amount(
     )
 
     return total_spent
+
+
+async def get_account_total_credited_amount(
+    session: AsyncSession,
+    account_id: str,
+    from_date: Optional[str] = None,
+    to_date: Optional[str] = None,
+    category: Optional[transaction_models.TransactionCategory] = None,
+    custom_category: Optional[str] = None,
+) -> Decimal:
+    bank_account = await bank_account_service.get_bank_account_by_id(session, account_id)
+    if bank_account is None:
+        raise transaction_errors.AccountNotFound()
+    
+    if from_date is None:
+        # If from date is not given we set it to 90 days prior from
+        # current date as this is max historical days we have access to
+        from_date = (datetime.now() - timedelta(days=90)).strftime("%Y-%m-%d")
+    
+    if to_date is None:
+        to_date = datetime.now().strftime("%Y-%m-%d")
+    
+    total_credited = await transaction_service.get_total_credited_amount_of_account(
+        session=session,
+        account_id=account_id,
+        from_date=from_date,
+        to_date=to_date,
+        category=category,
+        custom_category=custom_category
+    )
+
+    return total_credited

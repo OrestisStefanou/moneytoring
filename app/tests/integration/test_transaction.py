@@ -1984,3 +1984,318 @@ class TestGetAccountTotalSpent:
         # Assert
         assert response.status_code == 200
         assert response.json() == {"total_spent": -250.0}
+
+    @pytest.mark.asyncio
+    async def test_category(
+        self,
+        test_client,
+        test_db,
+        async_session,
+        authenticated_user,
+    ):
+        # Prepare
+        test_account_id = "26f6f755-0633-4eb4-963c-03534fe03c9e"
+        bank_account_repo = BankAccountRepo(session=async_session)
+        await bank_account_repo.add(
+            account_id=test_account_id,
+            requistion_id="test_requisition_id",
+            name="LaundryAccount",
+            currency="BTC"
+        )
+
+        # Create mock transactions
+        transaction_repo = TransactionRepo(async_session)
+        for i in range(1,11):
+            await transaction_repo.add(
+                _id=f"transacion_{i}",
+                account_id=test_account_id,
+                amount="-50.00",
+                currency="EUR",
+                information="Supermarket",
+                code="TOP_SECRET",
+                created_date="2022-07-28",
+                booking_date=f"2022-07-{i}"
+            )
+
+        for i in range(1,3):
+            await transactions_services.set_transaction_category(
+                session=async_session,
+                transaction_id=f"transacion_{i}",
+                category="food"
+            )
+
+        # Act
+        response = test_client.get(
+            f"/account_transactions/{test_account_id}/total_spent?category=food"
+        )
+
+        # Assert
+        assert response.status_code == 200
+        assert response.json() == {"total_spent": -100.0}
+
+    @pytest.mark.asyncio
+    async def test_custom_category(
+        self,
+        test_client,
+        test_db,
+        async_session,
+        authenticated_user,
+    ):
+        # Prepare
+        test_account_id = "26f6f755-0633-4eb4-963c-03534fe03c9e"
+        bank_account_repo = BankAccountRepo(session=async_session)
+        await bank_account_repo.add(
+            account_id=test_account_id,
+            requistion_id="test_requisition_id",
+            name="LaundryAccount",
+            currency="BTC"
+        )
+
+        # Create mock transactions
+        transaction_repo = TransactionRepo(async_session)
+        for i in range(1,11):
+            await transaction_repo.add(
+                _id=f"transacion_{i}",
+                account_id=test_account_id,
+                amount="-50.00",
+                currency="EUR",
+                information="Supermarket",
+                code="TOP_SECRET",
+                created_date="2022-07-28",
+                booking_date=f"2022-07-{i}"
+            )
+
+        for i in range(1,3):
+            await transactions_services.set_transaction_custom_category(
+                session=async_session,
+                transaction_id=f"transacion_{i}",
+                custom_category="pizza"
+            )
+
+        # Act
+        response = test_client.get(
+            f"/account_transactions/{test_account_id}/total_spent?custom_category=pizza"
+        )
+
+        # Assert
+        assert response.status_code == 200
+        assert response.json() == {"total_spent": -100.0}
+
+    @pytest.mark.asyncio
+    async def test_account_not_found(
+        self,
+        test_client,
+        test_db,
+        async_session,
+        authenticated_user,
+        nordigen_token,
+        httpx_mock: HTTPXMock
+    ):
+        # Act
+        response = test_client.get(
+            f"/account_transactions/26f6f755-0633-4eb4-963c-03534fe03c9e/total_spent"
+        )
+
+        # Assert
+        assert response.status_code == 404
+        assert response.json()['detail'] == "Account with given id not found"
+
+
+class TestGetAccountTotalCredited:
+    @pytest.mark.asyncio
+    async def test_no_params(
+        self,
+        test_client,
+        test_db,
+        async_session,
+        authenticated_user,
+    ):
+        # Prepare
+        test_account_id = "26f6f755-0633-4eb4-963c-03534fe03c9e"
+        bank_account_repo = BankAccountRepo(session=async_session)
+        await bank_account_repo.add(
+            account_id=test_account_id,
+            requistion_id="test_requisition_id",
+            name="LaundryAccount",
+            currency="BTC"
+        )
+
+        # Create mock transactions
+        transaction_repo = TransactionRepo(async_session)
+        for i in range(1,11):
+            await transaction_repo.add(
+                _id=f"transacion_{i}",
+                account_id=test_account_id,
+                amount="50.00",
+                currency="EUR",
+                information="Black market",
+                code="TOP_SECRET",
+                created_date="2022-07-28",
+                booking_date=f"2022-07-{i}"
+            )
+
+        # Act
+        response = test_client.get(
+            f"/account_transactions/{test_account_id}/total_credited"
+        )
+
+        # Assert
+        assert response.status_code == 200
+        assert response.json() == {"total_credited": 500.0}
+
+
+    @pytest.mark.asyncio
+    async def test_date_range(
+        self,
+        test_client,
+        test_db,
+        async_session,
+        authenticated_user,
+    ):
+        # Prepare
+        test_account_id = "26f6f755-0633-4eb4-963c-03534fe03c9e"
+        bank_account_repo = BankAccountRepo(session=async_session)
+        await bank_account_repo.add(
+            account_id=test_account_id,
+            requistion_id="test_requisition_id",
+            name="LaundryAccount",
+            currency="BTC"
+        )
+
+        # Create mock transactions
+        transaction_repo = TransactionRepo(async_session)
+        for i in range(1,11):
+            await transaction_repo.add(
+                _id=f"transacion_{i}",
+                account_id=test_account_id,
+                amount="50.00",
+                currency="EUR",
+                information="Black Market",
+                code="TOP_SECRET",
+                created_date="2022-07-28",
+                booking_date=f"2022-07-{i}"
+            )
+
+        # Act
+        response = test_client.get(
+            f"/account_transactions/{test_account_id}/total_credited?from_date=2022-07-01&to_date=2022-07-05"
+        )
+
+        # Assert
+        assert response.status_code == 200
+        assert response.json() == {"total_credited": 250.0}
+
+    @pytest.mark.asyncio
+    async def test_category(
+        self,
+        test_client,
+        test_db,
+        async_session,
+        authenticated_user,
+    ):
+        # Prepare
+        test_account_id = "26f6f755-0633-4eb4-963c-03534fe03c9e"
+        bank_account_repo = BankAccountRepo(session=async_session)
+        await bank_account_repo.add(
+            account_id=test_account_id,
+            requistion_id="test_requisition_id",
+            name="LaundryAccount",
+            currency="BTC"
+        )
+
+        # Create mock transactions
+        transaction_repo = TransactionRepo(async_session)
+        for i in range(1,11):
+            await transaction_repo.add(
+                _id=f"transacion_{i}",
+                account_id=test_account_id,
+                amount="50.00",
+                currency="EUR",
+                information="Black market",
+                code="TOP_SECRET",
+                created_date="2022-07-28",
+                booking_date=f"2022-07-{i}"
+            )
+
+        for i in range(1,3):
+            await transactions_services.set_transaction_category(
+                session=async_session,
+                transaction_id=f"transacion_{i}",
+                category="food"
+            )
+
+        # Act
+        response = test_client.get(
+            f"/account_transactions/{test_account_id}/total_credited?category=food"
+        )
+
+        # Assert
+        assert response.status_code == 200
+        assert response.json() == {"total_credited": 100.0}
+
+    @pytest.mark.asyncio
+    async def test_custom_category(
+        self,
+        test_client,
+        test_db,
+        async_session,
+        authenticated_user,
+    ):
+        # Prepare
+        test_account_id = "26f6f755-0633-4eb4-963c-03534fe03c9e"
+        bank_account_repo = BankAccountRepo(session=async_session)
+        await bank_account_repo.add(
+            account_id=test_account_id,
+            requistion_id="test_requisition_id",
+            name="LaundryAccount",
+            currency="BTC"
+        )
+
+        # Create mock transactions
+        transaction_repo = TransactionRepo(async_session)
+        for i in range(1,11):
+            await transaction_repo.add(
+                _id=f"transacion_{i}",
+                account_id=test_account_id,
+                amount="50.00",
+                currency="EUR",
+                information="Black market",
+                code="TOP_SECRET",
+                created_date="2022-07-28",
+                booking_date=f"2022-07-{i}"
+            )
+
+        for i in range(1,3):
+            await transactions_services.set_transaction_custom_category(
+                session=async_session,
+                transaction_id=f"transacion_{i}",
+                custom_category="pizza"
+            )
+
+        # Act
+        response = test_client.get(
+            f"/account_transactions/{test_account_id}/total_credited?custom_category=pizza"
+        )
+
+        # Assert
+        assert response.status_code == 200
+        assert response.json() == {"total_credited": 100.0}
+
+    @pytest.mark.asyncio
+    async def test_account_not_found(
+        self,
+        test_client,
+        test_db,
+        async_session,
+        authenticated_user,
+        nordigen_token,
+        httpx_mock: HTTPXMock
+    ):
+        # Act
+        response = test_client.get(
+            f"/account_transactions/26f6f755-0633-4eb4-963c-03534fe03c9e/total_credited"
+        )
+
+        # Assert
+        assert response.status_code == 404
+        assert response.json()['detail'] == "Account with given id not found"

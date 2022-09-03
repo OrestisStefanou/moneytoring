@@ -1,9 +1,10 @@
-# How to run the app
-uvicorn app.main:app --reload
+# How to run the app locally
+1. Install pipenv
+2. Run 'pipenv install'
+3. Run 'uvicorn app.main:app --reload'
 
 # How to run tests
 pytest app/tests/
-
 
 # Code structure
 - models: All the pydantic models that we use to model the data we use in the app.In database subfolder we have the models that are backed with a table in our db and in http subfolder the models that we use to structure the response we get from our http providers
@@ -17,6 +18,4 @@ pytest app/tests/
 
 # Next steps
 1. Transition to another database(Postgres, CockroachDB)
-2. Add analytics endpoints?
-    1. Endpoints to get amount that spent and amount that was credited per account and total
-    2. 
+2. Add more tests

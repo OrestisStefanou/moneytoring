@@ -2299,3 +2299,595 @@ class TestGetAccountTotalCredited:
         # Assert
         assert response.status_code == 404
         assert response.json()['detail'] == "Account with given id not found"
+
+
+class TestGetUserTotalSpent:
+    @pytest.mark.asyncio
+    async def test_no_params(
+        self,
+        test_client,
+        test_db,
+        async_session,
+        authenticated_user,
+    ):
+        # Prepare
+        # Crete test requisition
+        requisition_repo = RequisitionRepo(async_session)
+        await requisition_repo.add(
+            _id="test_requisition_id",
+            user_id="test_user_id",
+            institution_id="Anavargos_bank_id",
+            institution_name="Anavagros_bank",
+            link="some_link.com",
+        )
+
+        # Create test bank account
+        bank_account_repo = BankAccountRepo(async_session)
+        test_account_id = "26f6f755-0633-4eb4-963c-03534fe03c9e"
+        await bank_account_repo.add(
+            account_id=test_account_id,
+            requistion_id="test_requisition_id",
+            name="LaundryAccount",
+            currency="BTC"
+        )
+        test_account_id_2 = "f9a31318-a48c-4fc9-a038-5defb4db0509"
+        await bank_account_repo.add(
+            account_id=test_account_id_2,
+            requistion_id="test_requisition_id",
+            name="LaundryAccount",
+            currency="BTC"
+        )
+
+        # Create mock transactions
+        transaction_repo = TransactionRepo(async_session)
+        for i in range(2):
+            await transaction_repo.add(
+                _id=f"transacion_{i}",
+                account_id=test_account_id,
+                amount="-50.00",
+                currency="BTC",
+                information="Supermarket",
+                code="TOP_SECRET",
+                created_date="2022-07-28",
+                booking_date="2022-07-28"
+            )
+        for i in range(2,4):
+            await transaction_repo.add(
+                _id=f"transacion_{i}",
+                account_id=test_account_id_2,
+                amount="-50.00",
+                currency="BTC",
+                information="Ecstasy is fantasy",
+                code="MDMA",
+                created_date="2022-07-27",
+                booking_date="2022-07-27"
+            )
+
+        # Act
+        response = test_client.get(
+            "/transactions/total_spent"
+        )
+
+        # Assert
+        assert response.status_code == 200
+        assert response.json() == {"total_spent": -200.0}
+
+    @pytest.mark.asyncio
+    async def test_date_range(
+        self,
+        test_client,
+        test_db,
+        async_session,
+        authenticated_user,
+    ):
+        # Prepare
+        # Crete test requisition
+        requisition_repo = RequisitionRepo(async_session)
+        await requisition_repo.add(
+            _id="test_requisition_id",
+            user_id="test_user_id",
+            institution_id="Anavargos_bank_id",
+            institution_name="Anavagros_bank",
+            link="some_link.com",
+        )
+
+        # Create test bank account
+        bank_account_repo = BankAccountRepo(async_session)
+        test_account_id = "26f6f755-0633-4eb4-963c-03534fe03c9e"
+        await bank_account_repo.add(
+            account_id=test_account_id,
+            requistion_id="test_requisition_id",
+            name="LaundryAccount",
+            currency="BTC"
+        )
+        test_account_id_2 = "f9a31318-a48c-4fc9-a038-5defb4db0509"
+        await bank_account_repo.add(
+            account_id=test_account_id_2,
+            requistion_id="test_requisition_id",
+            name="LaundryAccount",
+            currency="BTC"
+        )
+
+        # Create mock transactions
+        transaction_repo = TransactionRepo(async_session)
+        for i in range(20,25):
+            await transaction_repo.add(
+                _id=f"transacion_{i}",
+                account_id=test_account_id,
+                amount="-50.00",
+                currency="BTC",
+                information="Supermarket",
+                code="TOP_SECRET",
+                created_date="2022-07-28",
+                booking_date=f"2022-07-{i}"
+            )
+        for i in range(20,25):
+            await transaction_repo.add(
+                _id=f"transacion_{i+100}",  # To avoid duplicate ids with above transactions
+                account_id=test_account_id_2,
+                amount="-50.00",
+                currency="BTC",
+                information="Ecstasy is fantasy",
+                code="MDMA",
+                created_date="2022-07-27",
+                booking_date=f"2022-07-{i}"
+            )
+
+        # Act
+        response = test_client.get(
+            "/transactions/total_spent?from_date=2022-07-21&to_date=2022-07-22"
+        )
+
+        # Assert
+        assert response.status_code == 200
+        assert response.json() == {"total_spent": -200.0}
+
+    @pytest.mark.asyncio
+    async def test_category(
+        self,
+        test_client,
+        test_db,
+        async_session,
+        authenticated_user,
+    ):
+        # Prepare
+        # Crete test requisition
+        requisition_repo = RequisitionRepo(async_session)
+        await requisition_repo.add(
+            _id="test_requisition_id",
+            user_id="test_user_id",
+            institution_id="Anavargos_bank_id",
+            institution_name="Anavagros_bank",
+            link="some_link.com",
+        )
+
+        # Create test bank account
+        bank_account_repo = BankAccountRepo(async_session)
+        test_account_id = "26f6f755-0633-4eb4-963c-03534fe03c9e"
+        await bank_account_repo.add(
+            account_id=test_account_id,
+            requistion_id="test_requisition_id",
+            name="LaundryAccount",
+            currency="BTC"
+        )
+        test_account_id_2 = "f9a31318-a48c-4fc9-a038-5defb4db0509"
+        await bank_account_repo.add(
+            account_id=test_account_id_2,
+            requistion_id="test_requisition_id",
+            name="LaundryAccount",
+            currency="BTC"
+        )
+
+        # Create mock transactions
+        transaction_repo = TransactionRepo(async_session)
+        for i in range(20,25):
+            await transaction_repo.add(
+                _id=f"transacion_{i}",
+                account_id=test_account_id,
+                amount="-50.00",
+                currency="BTC",
+                information="Supermarket",
+                code="TOP_SECRET",
+                created_date="2022-07-28",
+                booking_date=f"2022-07-{i}"
+            )
+        for i in range(20,25):
+            await transaction_repo.add(
+                _id=f"transacion_{i+100}",  # To avoid duplicate ids with above transactions
+                account_id=test_account_id_2,
+                amount="-50.00",
+                currency="BTC",
+                information="Ecstasy is fantasy",
+                code="MDMA",
+                created_date="2022-07-27",
+                booking_date=f"2022-07-{i}"
+            )
+
+        for i in [20,120]:
+            await transactions_services.set_transaction_category(
+                session=async_session,
+                transaction_id=f"transacion_{i}",
+                category="food"
+            )
+
+        # Act
+        response = test_client.get(
+            "/transactions/total_spent?category=food"
+        )
+
+        # Assert
+        assert response.status_code == 200
+        assert response.json() == {"total_spent": -100.0}
+
+    @pytest.mark.asyncio
+    async def test_custom_category(
+        self,
+        test_client,
+        test_db,
+        async_session,
+        authenticated_user,
+    ):
+        # Prepare
+        # Crete test requisition
+        requisition_repo = RequisitionRepo(async_session)
+        await requisition_repo.add(
+            _id="test_requisition_id",
+            user_id="test_user_id",
+            institution_id="Anavargos_bank_id",
+            institution_name="Anavagros_bank",
+            link="some_link.com",
+        )
+
+        # Create test bank account
+        bank_account_repo = BankAccountRepo(async_session)
+        test_account_id = "26f6f755-0633-4eb4-963c-03534fe03c9e"
+        await bank_account_repo.add(
+            account_id=test_account_id,
+            requistion_id="test_requisition_id",
+            name="LaundryAccount",
+            currency="BTC"
+        )
+        test_account_id_2 = "f9a31318-a48c-4fc9-a038-5defb4db0509"
+        await bank_account_repo.add(
+            account_id=test_account_id_2,
+            requistion_id="test_requisition_id",
+            name="LaundryAccount",
+            currency="BTC"
+        )
+
+        # Create mock transactions
+        transaction_repo = TransactionRepo(async_session)
+        for i in range(20,25):
+            await transaction_repo.add(
+                _id=f"transacion_{i}",
+                account_id=test_account_id,
+                amount="-50.00",
+                currency="BTC",
+                information="Supermarket",
+                code="TOP_SECRET",
+                created_date="2022-07-28",
+                booking_date=f"2022-07-{i}"
+            )
+        for i in range(20,25):
+            await transaction_repo.add(
+                _id=f"transacion_{i+100}",  # To avoid duplicate ids with above transactions
+                account_id=test_account_id_2,
+                amount="-50.00",
+                currency="BTC",
+                information="Ecstasy is fantasy",
+                code="MDMA",
+                created_date="2022-07-27",
+                booking_date=f"2022-07-{i}"
+            )
+
+        for i in [20,120]:
+            await transactions_services.set_transaction_custom_category(
+                session=async_session,
+                transaction_id=f"transacion_{i}",
+                custom_category="gains"
+            )
+
+        # Act
+        response = test_client.get(
+            "/transactions/total_spent?custom_category=gains"
+        )
+
+        # Assert
+        assert response.status_code == 200
+        assert response.json() == {"total_spent": -100.0}
+
+
+class TestGetUserTotalCredited:
+    @pytest.mark.asyncio
+    async def test_no_params(
+        self,
+        test_client,
+        test_db,
+        async_session,
+        authenticated_user,
+    ):
+        # Prepare
+        # Crete test requisition
+        requisition_repo = RequisitionRepo(async_session)
+        await requisition_repo.add(
+            _id="test_requisition_id",
+            user_id="test_user_id",
+            institution_id="Anavargos_bank_id",
+            institution_name="Anavagros_bank",
+            link="some_link.com",
+        )
+
+        # Create test bank account
+        bank_account_repo = BankAccountRepo(async_session)
+        test_account_id = "26f6f755-0633-4eb4-963c-03534fe03c9e"
+        await bank_account_repo.add(
+            account_id=test_account_id,
+            requistion_id="test_requisition_id",
+            name="LaundryAccount",
+            currency="BTC"
+        )
+        test_account_id_2 = "f9a31318-a48c-4fc9-a038-5defb4db0509"
+        await bank_account_repo.add(
+            account_id=test_account_id_2,
+            requistion_id="test_requisition_id",
+            name="LaundryAccount",
+            currency="BTC"
+        )
+
+        # Create mock transactions
+        transaction_repo = TransactionRepo(async_session)
+        for i in range(2):
+            await transaction_repo.add(
+                _id=f"transacion_{i}",
+                account_id=test_account_id,
+                amount="50.00",
+                currency="BTC",
+                information="Supermarket",
+                code="TOP_SECRET",
+                created_date="2022-07-28",
+                booking_date="2022-07-28"
+            )
+        for i in range(2,4):
+            await transaction_repo.add(
+                _id=f"transacion_{i}",
+                account_id=test_account_id_2,
+                amount="50.00",
+                currency="BTC",
+                information="Ecstasy is fantasy",
+                code="MDMA",
+                created_date="2022-07-27",
+                booking_date="2022-07-27"
+            )
+
+        # Act
+        response = test_client.get(
+            "/transactions/total_credited"
+        )
+
+        # Assert
+        assert response.status_code == 200
+        assert response.json() == {"total_credited": 200.0}
+
+    @pytest.mark.asyncio
+    async def test_date_range(
+        self,
+        test_client,
+        test_db,
+        async_session,
+        authenticated_user,
+    ):
+        # Prepare
+        # Crete test requisition
+        requisition_repo = RequisitionRepo(async_session)
+        await requisition_repo.add(
+            _id="test_requisition_id",
+            user_id="test_user_id",
+            institution_id="Anavargos_bank_id",
+            institution_name="Anavagros_bank",
+            link="some_link.com",
+        )
+
+        # Create test bank account
+        bank_account_repo = BankAccountRepo(async_session)
+        test_account_id = "26f6f755-0633-4eb4-963c-03534fe03c9e"
+        await bank_account_repo.add(
+            account_id=test_account_id,
+            requistion_id="test_requisition_id",
+            name="LaundryAccount",
+            currency="BTC"
+        )
+        test_account_id_2 = "f9a31318-a48c-4fc9-a038-5defb4db0509"
+        await bank_account_repo.add(
+            account_id=test_account_id_2,
+            requistion_id="test_requisition_id",
+            name="LaundryAccount",
+            currency="BTC"
+        )
+
+        # Create mock transactions
+        transaction_repo = TransactionRepo(async_session)
+        for i in range(20,25):
+            await transaction_repo.add(
+                _id=f"transacion_{i}",
+                account_id=test_account_id,
+                amount="50.00",
+                currency="BTC",
+                information="Supermarket",
+                code="TOP_SECRET",
+                created_date="2022-07-28",
+                booking_date=f"2022-07-{i}"
+            )
+        for i in range(20,25):
+            await transaction_repo.add(
+                _id=f"transacion_{i+100}",  # To avoid duplicate ids with above transactions
+                account_id=test_account_id_2,
+                amount="50.00",
+                currency="BTC",
+                information="Ecstasy is fantasy",
+                code="MDMA",
+                created_date="2022-07-27",
+                booking_date=f"2022-07-{i}"
+            )
+
+        # Act
+        response = test_client.get(
+            "/transactions/total_credited?from_date=2022-07-21&to_date=2022-07-22"
+        )
+
+        # Assert
+        assert response.status_code == 200
+        assert response.json() == {"total_credited": 200.0}
+
+    @pytest.mark.asyncio
+    async def test_category(
+        self,
+        test_client,
+        test_db,
+        async_session,
+        authenticated_user,
+    ):
+        # Prepare
+        # Crete test requisition
+        requisition_repo = RequisitionRepo(async_session)
+        await requisition_repo.add(
+            _id="test_requisition_id",
+            user_id="test_user_id",
+            institution_id="Anavargos_bank_id",
+            institution_name="Anavagros_bank",
+            link="some_link.com",
+        )
+
+        # Create test bank account
+        bank_account_repo = BankAccountRepo(async_session)
+        test_account_id = "26f6f755-0633-4eb4-963c-03534fe03c9e"
+        await bank_account_repo.add(
+            account_id=test_account_id,
+            requistion_id="test_requisition_id",
+            name="LaundryAccount",
+            currency="BTC"
+        )
+        test_account_id_2 = "f9a31318-a48c-4fc9-a038-5defb4db0509"
+        await bank_account_repo.add(
+            account_id=test_account_id_2,
+            requistion_id="test_requisition_id",
+            name="LaundryAccount",
+            currency="BTC"
+        )
+
+        # Create mock transactions
+        transaction_repo = TransactionRepo(async_session)
+        for i in range(20,25):
+            await transaction_repo.add(
+                _id=f"transacion_{i}",
+                account_id=test_account_id,
+                amount="50.00",
+                currency="BTC",
+                information="Supermarket",
+                code="TOP_SECRET",
+                created_date="2022-07-28",
+                booking_date=f"2022-07-{i}"
+            )
+        for i in range(20,25):
+            await transaction_repo.add(
+                _id=f"transacion_{i+100}",  # To avoid duplicate ids with above transactions
+                account_id=test_account_id_2,
+                amount="50.00",
+                currency="BTC",
+                information="Ecstasy is fantasy",
+                code="MDMA",
+                created_date="2022-07-27",
+                booking_date=f"2022-07-{i}"
+            )
+
+        for i in [20,120]:
+            await transactions_services.set_transaction_category(
+                session=async_session,
+                transaction_id=f"transacion_{i}",
+                category="food"
+            )
+
+        # Act
+        response = test_client.get(
+            "/transactions/total_credited?category=food"
+        )
+
+        # Assert
+        assert response.status_code == 200
+        assert response.json() == {"total_credited": 100.0}
+
+    @pytest.mark.asyncio
+    async def test_custom_category(
+        self,
+        test_client,
+        test_db,
+        async_session,
+        authenticated_user,
+    ):
+        # Prepare
+        # Crete test requisition
+        requisition_repo = RequisitionRepo(async_session)
+        await requisition_repo.add(
+            _id="test_requisition_id",
+            user_id="test_user_id",
+            institution_id="Anavargos_bank_id",
+            institution_name="Anavagros_bank",
+            link="some_link.com",
+        )
+
+        # Create test bank account
+        bank_account_repo = BankAccountRepo(async_session)
+        test_account_id = "26f6f755-0633-4eb4-963c-03534fe03c9e"
+        await bank_account_repo.add(
+            account_id=test_account_id,
+            requistion_id="test_requisition_id",
+            name="LaundryAccount",
+            currency="BTC"
+        )
+        test_account_id_2 = "f9a31318-a48c-4fc9-a038-5defb4db0509"
+        await bank_account_repo.add(
+            account_id=test_account_id_2,
+            requistion_id="test_requisition_id",
+            name="LaundryAccount",
+            currency="BTC"
+        )
+
+        # Create mock transactions
+        transaction_repo = TransactionRepo(async_session)
+        for i in range(20,25):
+            await transaction_repo.add(
+                _id=f"transacion_{i}",
+                account_id=test_account_id,
+                amount="50.00",
+                currency="BTC",
+                information="Supermarket",
+                code="TOP_SECRET",
+                created_date="2022-07-28",
+                booking_date=f"2022-07-{i}"
+            )
+        for i in range(20,25):
+            await transaction_repo.add(
+                _id=f"transacion_{i+100}",  # To avoid duplicate ids with above transactions
+                account_id=test_account_id_2,
+                amount="50.00",
+                currency="BTC",
+                information="Ecstasy is fantasy",
+                code="MDMA",
+                created_date="2022-07-27",
+                booking_date=f"2022-07-{i}"
+            )
+
+        for i in [20,120]:
+            await transactions_services.set_transaction_custom_category(
+                session=async_session,
+                transaction_id=f"transacion_{i}",
+                custom_category="gains"
+            )
+
+        # Act
+        response = test_client.get(
+            "/transactions/total_credited?custom_category=gains"
+        )
+
+        # Assert
+        assert response.status_code == 200
+        assert response.json() == {"total_credited": 100.0}

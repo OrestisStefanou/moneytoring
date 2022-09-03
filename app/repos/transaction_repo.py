@@ -205,8 +205,10 @@ class TransactionRepo(SQLRepo):
         )
 
         return sum(
-            Decimal(transaction.amount) 
-            for transaction in transactions if Decimal(transaction.amount) < 0
+            [
+                Decimal(transaction.amount) 
+                for transaction in transactions if Decimal(transaction.amount) < 0
+            ]
         )
 
     async def get_total_credited_for_account(
@@ -226,8 +228,10 @@ class TransactionRepo(SQLRepo):
         )
 
         return sum(
-            Decimal(transaction.amount) 
-            for transaction in transactions if Decimal(transaction.amount) > 0
+            [
+                Decimal(transaction.amount) 
+                for transaction in transactions if Decimal(transaction.amount) > 0
+            ]
         )
 
     async def get_total_spend_for_account_list(
@@ -247,8 +251,10 @@ class TransactionRepo(SQLRepo):
         )
 
         return sum(
-            Decimal(transaction.amount) 
-            async for transaction in transactions if Decimal(transaction.amount) < 0
+            [
+                Decimal(transaction.amount) 
+                async for transaction in transactions if Decimal(transaction.amount) < 0
+            ]
         )
 
     async def get_total_credited_for_account_list(
@@ -268,6 +274,8 @@ class TransactionRepo(SQLRepo):
         )
 
         return sum(
-            Decimal(transaction.amount) 
-            async for transaction in transactions if Decimal(transaction.amount) > 0
+            [
+                Decimal(transaction.amount) 
+                async for transaction in transactions if Decimal(transaction.amount) > 0
+            ]
         )

@@ -171,3 +171,61 @@ async def get_account_total_credited_amount(
     )
 
     return total_credited
+
+
+async def get_user_total_spent_amount(
+    session: AsyncSession,
+    user_id: str,
+    from_date: Optional[str] = None,
+    to_date: Optional[str] = None,
+    category: Optional[transaction_models.TransactionCategory] = None,
+    custom_category: Optional[str] = None
+) -> AsyncIterable[transaction_models.AccountTransaction]:
+    if from_date is None:
+        # If from date is not given we set it to 90 days prior from
+        # current date as this is max historical days we have access to
+        from_date = (datetime.now() - timedelta(days=90)).strftime("%Y-%m-%d")
+    
+    if to_date is None:
+        to_date = datetime.now().strftime("%Y-%m-%d")
+
+
+    total_spent = await transaction_service.get_total_spent_amount_of_user(
+        session=session,
+        user_id=user_id,
+        from_date=from_date,
+        to_date=to_date,
+        category=category,
+        custom_category=custom_category
+    )
+
+    return total_spent
+
+
+async def get_user_total_credited_amount(
+    session: AsyncSession,
+    user_id: str,
+    from_date: Optional[str] = None,
+    to_date: Optional[str] = None,
+    category: Optional[transaction_models.TransactionCategory] = None,
+    custom_category: Optional[str] = None
+) -> AsyncIterable[transaction_models.AccountTransaction]:
+    if from_date is None:
+        # If from date is not given we set it to 90 days prior from
+        # current date as this is max historical days we have access to
+        from_date = (datetime.now() - timedelta(days=90)).strftime("%Y-%m-%d")
+    
+    if to_date is None:
+        to_date = datetime.now().strftime("%Y-%m-%d")
+
+
+    total_credited = await transaction_service.get_total_credited_amount_of_user(
+        session=session,
+        user_id=user_id,
+        from_date=from_date,
+        to_date=to_date,
+        category=category,
+        custom_category=custom_category
+    )
+
+    return total_credited

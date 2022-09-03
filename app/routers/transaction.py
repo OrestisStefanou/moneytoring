@@ -189,7 +189,7 @@ async def add_transaction_custom_category(
 
 
 @router.get(
-    "/account_transactions/total_spent",
+    "/transactions/total_spent",
     response_model=transaction_entities.TotalSpentResponse,
     status_code=200
 )
@@ -201,7 +201,40 @@ async def get_user_total_spent(
     session: AsyncSession = Depends(get_session),
     user_id: str = Depends(extract_user_id_from_token)
 ):
-    pass
+    # Validation checks for the dates format
+    if from_date:
+        if transaction_utils.validate_date_format(from_date) is False:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Date must be in format YYYY-MM-DD",
+            )
+
+    if to_date:
+        if transaction_utils.validate_date_format(to_date) is False:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Date must be in format YYYY-MM-DD",
+            )
+
+    try:
+        total_spent = await transaction_controller.get_user_total_spent_amount(
+            session=session,
+            user_id=user_id,
+            from_date=from_date,
+            to_date=to_date,
+            category=category,
+            custom_category=custom_category
+        )
+    except Exception as err:
+        logging.exception("Unexpected error during get user transactions:", str(err))
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Something went wrong, we are working on it",
+        )
+
+    return transaction_entities.TotalSpentResponse(
+        total_spent=total_spent
+    )
 
 
 @router.get(
@@ -259,9 +292,8 @@ async def get_account_total_spent(
     )
 
 
-
 @router.get(
-    "/account_transactions/total_credited",
+    "/transactions/total_credited",
     response_model=transaction_entities.TotalCreditedResponse,
     status_code=200
 )
@@ -273,7 +305,40 @@ async def get_user_total_credited(
     session: AsyncSession = Depends(get_session),
     user_id: str = Depends(extract_user_id_from_token)
 ):
-    pass
+    # Validation checks for the dates format
+    if from_date:
+        if transaction_utils.validate_date_format(from_date) is False:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Date must be in format YYYY-MM-DD",
+            )
+
+    if to_date:
+        if transaction_utils.validate_date_format(to_date) is False:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Date must be in format YYYY-MM-DD",
+            )
+
+    try:
+        total_credited = await transaction_controller.get_user_total_credited_amount(
+            session=session,
+            user_id=user_id,
+            from_date=from_date,
+            to_date=to_date,
+            category=category,
+            custom_category=custom_category
+        )
+    except Exception as err:
+        logging.exception("Unexpected error during get user transactions:", str(err))
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Something went wrong, we are working on it",
+        )
+
+    return transaction_entities.TotalCreditedResponse(
+        total_credited=total_credited
+    )
 
 
 @router.get(

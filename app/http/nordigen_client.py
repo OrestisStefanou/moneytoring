@@ -153,11 +153,10 @@ class NordigenClient(HttpClient):
             return None
 
         account_details = response.json()
-
         return AccountDetails(
-            currency=account_details['account']['currency'],
-            name=account_details['account']['name'],
-            product=account_details['account']['product']
+            currency=account_details['account'].get('currency'),
+            name=account_details['account'].get('name',"Not provided"),
+            product=account_details['account'].get('product',"Not provided")
         )
 
     async def create_requisition(self, institution_id: str, redirect_uri: str) -> Requisition:
@@ -271,18 +270,33 @@ class NordigenClient(HttpClient):
 
         booked_transactions = transactions['booked']
 
-        return [
-            Transaction(
-                bank_transaction_code=transaction.get('bankTransactionCode'),
-                booking_date=transaction.get('bookingDate'),
-                remittance_information_unstructured=transaction.get('remittanceInformationUnstructured'),
-                transaction_amount=TransactionAmount(
-                    amount=transaction.get('transactionAmount').get('amount'),
-                    currency=transaction.get('transactionAmount').get('currency')
-                ),
-                transaction_id=transaction.get('transactionId'),
-                value_date=transaction.get('valueDate'),
-                debtor_name=transaction.get('debtorName')
+        account_transactions = []
+        for transaction in booked_transactions:
+            transaction_information = transaction.get('remittanceInformationUnstructured', None)
+            # Sometimes this field is available in response in sometimes is not
+            if transaction_information is None:
+                # Second attempt to get transaction information
+                transaction_information = transaction.get('remittanceInformationUnstructuredArray', None)
+                if transaction_information is None:
+                    # We give up
+                    transaction_information = "Not given"
+                else:
+                    # This is an array of strings so we join them to a single string
+                    transaction_information = ' '.join(transaction_information)
+            
+            account_transactions.append(
+                Transaction(
+                    bank_transaction_code=transaction.get('bankTransactionCode',"Not given"),
+                    booking_date=transaction.get('bookingDate'),
+                    remittance_information_unstructured=transaction_information,
+                    transaction_amount=TransactionAmount(
+                        amount=transaction.get('transactionAmount').get('amount'),
+                        currency=transaction.get('transactionAmount').get('currency')
+                    ),
+                    transaction_id=transaction.get('transactionId'),
+                    value_date=transaction.get('valueDate'),
+                    debtor_name=transaction.get('debtorName')
+                )                
             )
-            for transaction in booked_transactions
-        ]
+
+        return account_transactions

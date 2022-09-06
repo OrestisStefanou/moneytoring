@@ -28,9 +28,9 @@ class Agreement(BaseModel):
 
 
 class AccountDetails(BaseModel):
-    currency: str
-    name: str
-    product: str
+    currency: Optional[str]
+    name: Optional[str]
+    product: Optional[str]
 
 
 class Requisition(BaseModel):

@@ -20,4 +20,4 @@ class AccountHistory(SQLModel, table=True):
         """
         latest_date = datetime.strptime(self.latest_date, "%Y-%m-%d")
         requested_date_obj = datetime.strptime(requested_date, "%Y-%m-%d") 
-        return latest_date > requested_date_obj
+        return latest_date >= requested_date_obj

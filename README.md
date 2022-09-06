@@ -2,6 +2,7 @@
 1. Install pipenv
 2. Run 'pipenv install'
 3. Run 'uvicorn app.main:app --reload'
+4. Visit http://127.0.0.1:8000/docs to visit api interactive docs
 
 # How to run tests
 pytest app/tests/
@@ -19,3 +20,4 @@ pytest app/tests/
 # Next steps
 1. Transition to another database(Postgres, CockroachDB)
 2. Add more tests
+3. Deploy the app
